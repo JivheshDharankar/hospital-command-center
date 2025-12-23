@@ -1,12 +1,50 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Navbar } from '@/components/Navbar';
+import { Hero } from '@/components/Hero';
+import { StatsGrid } from '@/components/StatsGrid';
+import { QueueSimulation } from '@/components/QueueSimulation';
+import { Features } from '@/components/Features';
+import { Departments } from '@/components/Departments';
+import { HospitalDashboard } from '@/components/HospitalDashboard';
+import { SurgeOrchestration } from '@/components/SurgeOrchestration';
+import { CohortFinder } from '@/components/CohortFinder';
+import { SymptomChecker } from '@/components/SymptomChecker';
+import { NearbyHospitals } from '@/components/NearbyHospitals';
+import { AdminPanel } from '@/components/AdminPanel';
+import { SystemArchitecture } from '@/components/SystemArchitecture';
+import { ContactForm } from '@/components/ContactForm';
+import { Footer } from '@/components/Footer';
+import { useHospitals } from '@/hooks/useHospitals';
+import { useQueueSimulation } from '@/hooks/useQueueSimulation';
 
 const Index = () => {
+  const { hospitals, updateHospital, getTotalOccupancy } = useHospitals();
+  const { events, isRunning, toggleSimulation } = useQueueSimulation(hospitals);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-background" id="top">
+      <Navbar />
+      <Hero />
+      <StatsGrid />
+
+      <div className="container mx-auto px-4 md:px-8 py-12 space-y-8">
+        <QueueSimulation events={events} isRunning={isRunning} onToggle={toggleSimulation} />
       </div>
+
+      <Features />
+      <Departments />
+
+      <div className="container mx-auto px-4 md:px-8 space-y-8">
+        <HospitalDashboard hospitals={hospitals} />
+        <SurgeOrchestration occupancy={getTotalOccupancy()} />
+        <CohortFinder />
+        <SymptomChecker />
+        <NearbyHospitals hospitals={hospitals} />
+        <AdminPanel hospitals={hospitals} onUpdate={updateHospital} />
+        <SystemArchitecture />
+        <ContactForm />
+      </div>
+
+      <Footer />
     </div>
   );
 };
