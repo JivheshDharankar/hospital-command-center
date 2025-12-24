@@ -21,19 +21,19 @@ const Index = () => {
   const { events, isRunning, toggleSimulation } = useQueueSimulation(hospitals);
 
   return (
-    <div className="min-h-screen bg-background" id="top">
+    <div className="min-h-screen bg-background page-transition" id="top">
       <Navbar />
       <Hero />
       <StatsGrid />
 
-      <div className="container mx-auto px-4 md:px-8 py-12 space-y-8">
+      <div className="container mx-auto px-4 py-16 space-y-8">
         <QueueSimulation events={events} isRunning={isRunning} onToggle={toggleSimulation} />
       </div>
 
       <Features />
       <Departments />
 
-      <div className="container mx-auto px-4 md:px-8 space-y-8">
+      <div className="container mx-auto px-4 space-y-8 pb-16">
         <HospitalDashboard hospitals={hospitals} />
         <SurgeOrchestration occupancy={getTotalOccupancy()} />
         <CohortFinder />
