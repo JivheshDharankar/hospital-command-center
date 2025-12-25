@@ -62,7 +62,7 @@ export function AdminPanel({ hospitals, onUpdate }: AdminPanelProps) {
             Hospital ID
           </label>
           <Input
-            placeholder="1-4"
+            placeholder="1-15"
             value={hospitalId}
             onChange={(e) => setHospitalId(e.target.value)}
             className="rounded-xl border-border/50 focus:border-primary/50 h-12"
@@ -125,7 +125,7 @@ export function AdminPanel({ hospitals, onUpdate }: AdminPanelProps) {
         <h4 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3">
           Hospital Reference
         </h4>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {hospitals.map((h, i) => (
             <motion.button
               key={h.id}
