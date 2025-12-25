@@ -5,6 +5,7 @@ import { QueueSimulation } from '@/components/QueueSimulation';
 import { Features } from '@/components/Features';
 import { Departments } from '@/components/Departments';
 import { HospitalDashboard } from '@/components/HospitalDashboard';
+import { HospitalMap } from '@/components/HospitalMap';
 import { SurgeOrchestration } from '@/components/SurgeOrchestration';
 import { CohortFinder } from '@/components/CohortFinder';
 import { SymptomChecker } from '@/components/SymptomChecker';
@@ -35,6 +36,7 @@ const Index = () => {
 
       <div className="container mx-auto px-4 space-y-8 pb-16">
         <HospitalDashboard hospitals={hospitals} />
+        <HospitalMap hospitals={hospitals} />
         <SurgeOrchestration occupancy={getTotalOccupancy()} />
         <CohortFinder />
         <SymptomChecker />
