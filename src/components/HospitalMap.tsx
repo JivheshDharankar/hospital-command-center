@@ -7,7 +7,7 @@ import { Hospital } from '@/types/hospital';
 import { SectionCard } from './SectionCard';
 import { StatusBadge } from './StatusBadge';
 import { 
-  Map, Star, Bed, Phone, Clock, Navigation, 
+  MapIcon, Star, Bed, Phone, Clock, Navigation, 
   X, Maximize2, Minimize2, Building2
 } from 'lucide-react';
 import { Button } from './ui/button';
@@ -95,7 +95,7 @@ export function HospitalMap({ hospitals }: HospitalMapProps) {
       id="map"
       title="Hospital Map View"
       subtitle="Interactive map showing all 15 Pune hospitals with real-time status indicators."
-      icon={<Map className="w-6 h-6 text-primary-foreground" />}
+      icon={<MapIcon className="w-6 h-6 text-primary-foreground" />}
     >
       {/* Legend */}
       <div className="flex flex-wrap items-center gap-4 mb-4">
