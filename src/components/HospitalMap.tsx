@@ -77,7 +77,7 @@ export function HospitalMap({ hospitals }: HospitalMapProps) {
   const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [mapCenter, setMapCenter] = useState<[number, number]>([18.5204, 73.8567]); // Pune center
-  const mapRef = useRef<L.Map>(null);
+  const mapRef = useRef<L.Map | null>(null);
 
   const handleMarkerClick = (hospital: Hospital) => {
     setSelectedHospital(hospital);
@@ -133,7 +133,7 @@ export function HospitalMap({ hospitals }: HospitalMapProps) {
         <MapContainer
           center={mapCenter}
           zoom={12}
-          ref={mapRef}
+          ref={(ref) => { mapRef.current = ref as L.Map | null; }}
           className="w-full h-full z-0"
           style={{ height: '100%', minHeight: isExpanded ? 600 : 400 }}
         >
