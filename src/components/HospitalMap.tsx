@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GoogleMap, useJsApiLoader, MarkerF, InfoWindowF } from '@react-google-maps/api';
+import { GoogleMap, LoadScript, MarkerF, InfoWindowF } from '@react-google-maps/api';
 import { Hospital } from '@/types/hospital';
 import { SectionCard } from './SectionCard';
 import { StatusBadge } from './StatusBadge';
@@ -40,18 +40,13 @@ const getMarkerIcon = (status: Hospital['status']) => {
   };
 };
 
-// Inner component that handles the Google Maps rendering
-function GoogleMapsContent({ hospitals, apiKey }: { hospitals: Hospital[]; apiKey: string }) {
+// Inner component that renders once Google Maps is loaded
+function MapContent({ hospitals }: { hospitals: Hospital[] }) {
   const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
   const [hoveredHospital, setHoveredHospital] = useState<Hospital | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [mapCenter, setMapCenter] = useState(defaultCenter);
   const [map, setMap] = useState<google.maps.Map | null>(null);
-
-  const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: apiKey,
-    id: 'google-map-script',
-  });
 
   const onLoad = useCallback((map: google.maps.Map) => {
     setMap(map);
@@ -75,14 +70,6 @@ function GoogleMapsContent({ hospitals, apiKey }: { hospitals: Hospital[]; apiKe
     busy: hospitals.filter(h => h.status === 'busy').length,
     critical: hospitals.filter(h => h.status === 'critical').length,
   };
-
-  if (loadError) {
-    return (
-      <div className="flex items-center justify-center h-[400px] bg-muted/30 rounded-2xl">
-        <p className="text-muted-foreground">Unable to load map</p>
-      </div>
-    );
-  }
 
   return (
     <>
@@ -119,87 +106,81 @@ function GoogleMapsContent({ hospitals, apiKey }: { hospitals: Hospital[]; apiKe
         animate={{ height: isExpanded ? 600 : 400 }}
         transition={{ duration: 0.3 }}
       >
-        {isLoaded ? (
-          <GoogleMap
-            mapContainerStyle={mapContainerStyle}
-            center={mapCenter}
-            zoom={12}
-            onLoad={onLoad}
-            onUnmount={onUnmount}
-            options={{
-              styles: [
-                { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
-                { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
-                { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
-                { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
-                { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
-                { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#263c3f' }] },
-                { featureType: 'poi.park', elementType: 'labels.text.fill', stylers: [{ color: '#6b9a76' }] },
-                { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#38414e' }] },
-                { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#212a37' }] },
-                { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#9ca5b3' }] },
-                { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#746855' }] },
-                { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#1f2835' }] },
-                { featureType: 'road.highway', elementType: 'labels.text.fill', stylers: [{ color: '#f3d19c' }] },
-                { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#2f3948' }] },
-                { featureType: 'transit.station', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
-                { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#17263c' }] },
-                { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#515c6d' }] },
-                { featureType: 'water', elementType: 'labels.text.stroke', stylers: [{ color: '#17263c' }] },
-              ],
-              disableDefaultUI: false,
-              zoomControl: true,
-              mapTypeControl: false,
-              streetViewControl: false,
-              fullscreenControl: false,
-            }}
-          >
-            {hospitals.map((hospital) => (
-              <MarkerF
-                key={hospital.id}
-                position={{ lat: hospital.lat, lng: hospital.lng }}
-                icon={getMarkerIcon(hospital.status)}
-                onClick={() => handleMarkerClick(hospital)}
-                onMouseOver={() => setHoveredHospital(hospital)}
-                onMouseOut={() => setHoveredHospital(null)}
-              />
-            ))}
+        <GoogleMap
+          mapContainerStyle={mapContainerStyle}
+          center={mapCenter}
+          zoom={12}
+          onLoad={onLoad}
+          onUnmount={onUnmount}
+          options={{
+            styles: [
+              { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
+              { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
+              { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
+              { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
+              { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
+              { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#263c3f' }] },
+              { featureType: 'poi.park', elementType: 'labels.text.fill', stylers: [{ color: '#6b9a76' }] },
+              { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#38414e' }] },
+              { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#212a37' }] },
+              { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#9ca5b3' }] },
+              { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#746855' }] },
+              { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#1f2835' }] },
+              { featureType: 'road.highway', elementType: 'labels.text.fill', stylers: [{ color: '#f3d19c' }] },
+              { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#2f3948' }] },
+              { featureType: 'transit.station', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
+              { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#17263c' }] },
+              { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#515c6d' }] },
+              { featureType: 'water', elementType: 'labels.text.stroke', stylers: [{ color: '#17263c' }] },
+            ],
+            disableDefaultUI: false,
+            zoomControl: true,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false,
+          }}
+        >
+          {hospitals.map((hospital) => (
+            <MarkerF
+              key={hospital.id}
+              position={{ lat: hospital.lat, lng: hospital.lng }}
+              icon={getMarkerIcon(hospital.status)}
+              onClick={() => handleMarkerClick(hospital)}
+              onMouseOver={() => setHoveredHospital(hospital)}
+              onMouseOut={() => setHoveredHospital(null)}
+            />
+          ))}
 
-            {hoveredHospital && !selectedHospital && (
-              <InfoWindowF
-                position={{ lat: hoveredHospital.lat, lng: hoveredHospital.lng }}
-                onCloseClick={() => setHoveredHospital(null)}
-              >
-                <div className="p-1 min-w-[200px]">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <h3 className="font-semibold text-sm text-gray-900">{hoveredHospital.name}</h3>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                      hoveredHospital.status === 'normal' ? 'bg-emerald-100 text-emerald-700' :
-                      hoveredHospital.status === 'busy' ? 'bg-amber-100 text-amber-700' :
-                      'bg-rose-100 text-rose-700'
-                    }`}>
-                      {hoveredHospital.status}
-                    </span>
+          {hoveredHospital && !selectedHospital && (
+            <InfoWindowF
+              position={{ lat: hoveredHospital.lat, lng: hoveredHospital.lng }}
+              onCloseClick={() => setHoveredHospital(null)}
+            >
+              <div className="p-1 min-w-[200px]">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <h3 className="font-semibold text-sm text-gray-900">{hoveredHospital.name}</h3>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                    hoveredHospital.status === 'normal' ? 'bg-emerald-100 text-emerald-700' :
+                    hoveredHospital.status === 'busy' ? 'bg-amber-100 text-amber-700' :
+                    'bg-rose-100 text-rose-700'
+                  }`}>
+                    {hoveredHospital.status}
+                  </span>
+                </div>
+                <div className="space-y-1 text-xs text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <Bed className="w-3 h-3" />
+                    <span>{hoveredHospital.available_beds} beds available</span>
                   </div>
-                  <div className="space-y-1 text-xs text-gray-600">
-                    <div className="flex items-center gap-2">
-                      <Bed className="w-3 h-3" />
-                      <span>{hoveredHospital.available_beds} beds available</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Star className="w-3 h-3 text-amber-500" />
-                      <span>{hoveredHospital.rating} ({hoveredHospital.reviewCount.toLocaleString()} reviews)</span>
-                    </div>
+                  <div className="flex items-center gap-2">
+                    <Star className="w-3 h-3 text-amber-500" />
+                    <span>{hoveredHospital.rating} ({hoveredHospital.reviewCount.toLocaleString()} reviews)</span>
                   </div>
                 </div>
-              </InfoWindowF>
-            )}
-          </GoogleMap>
-        ) : (
-          <div className="flex items-center justify-center h-full bg-muted/30">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        )}
+              </div>
+            </InfoWindowF>
+          )}
+        </GoogleMap>
 
         {/* Selected Hospital Detail Panel */}
         <AnimatePresence>
@@ -393,7 +374,9 @@ export function HospitalMap({ hospitals }: HospitalMapProps) {
       subtitle="Interactive map showing all 15 Pune hospitals with real-time status indicators."
       icon={<MapIcon className="w-6 h-6 text-primary-foreground" />}
     >
-      <GoogleMapsContent hospitals={hospitals} apiKey={apiKey} />
+      <LoadScript googleMapsApiKey={apiKey}>
+        <MapContent hospitals={hospitals} />
+      </LoadScript>
     </SectionCard>
   );
 }
