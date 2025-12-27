@@ -1,68 +1,84 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { GoogleMap, LoadScript, MarkerF, InfoWindowF } from '@react-google-maps/api';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { Hospital } from '@/types/hospital';
 import { SectionCard } from './SectionCard';
 import { StatusBadge } from './StatusBadge';
 import { 
   MapIcon, Star, Bed, Phone, Clock, Navigation, 
-  X, Maximize2, Minimize2, Building2, Loader2
+  X, Maximize2, Minimize2, Building2, Users
 } from 'lucide-react';
 import { Button } from './ui/button';
-import { supabase } from '@/integrations/supabase/client';
 
 interface HospitalMapProps {
   hospitals: Hospital[];
 }
 
-const mapContainerStyle = {
-  width: '100%',
-  height: '100%',
-};
+const defaultCenter: [number, number] = [18.5204, 73.8567]; // Pune center
 
-const defaultCenter = { lat: 18.5204, lng: 73.8567 }; // Pune center
-
-const getMarkerIcon = (status: Hospital['status']) => {
+// Custom marker icons based on status
+const createMarkerIcon = (status: Hospital['status']) => {
   const colors = {
     normal: '#10b981',
     busy: '#f59e0b', 
     critical: '#ef4444',
   };
   
-  return {
-    path: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z',
-    fillColor: colors[status],
-    fillOpacity: 1,
-    strokeColor: '#ffffff',
-    strokeWeight: 2,
-    scale: 1.8,
-    anchor: { x: 12, y: 22 } as google.maps.Point,
-  };
+  const color = colors[status];
+  
+  return L.divIcon({
+    className: 'custom-marker',
+    html: `
+      <div style="
+        width: 32px;
+        height: 32px;
+        background: ${color};
+        border: 3px solid white;
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        box-shadow: 0 4px 12px ${color}80;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      ">
+        <div style="
+          width: 10px;
+          height: 10px;
+          background: white;
+          border-radius: 50%;
+          transform: rotate(45deg);
+        "></div>
+      </div>
+    `,
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  });
 };
 
-// Inner component that renders once Google Maps is loaded
-function MapContent({ hospitals }: { hospitals: Hospital[] }) {
+// Map controller component for programmatic map control
+function MapController({ center, zoom }: { center: [number, number]; zoom: number }) {
+  const map = useMap();
+  
+  useEffect(() => {
+    map.flyTo(center, zoom, { duration: 0.8 });
+  }, [center, zoom, map]);
+  
+  return null;
+}
+
+export function HospitalMap({ hospitals }: HospitalMapProps) {
   const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
-  const [hoveredHospital, setHoveredHospital] = useState<Hospital | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [mapCenter, setMapCenter] = useState(defaultCenter);
-  const [map, setMap] = useState<google.maps.Map | null>(null);
-
-  const onLoad = useCallback((map: google.maps.Map) => {
-    setMap(map);
-  }, []);
-
-  const onUnmount = useCallback(() => {
-    setMap(null);
-  }, []);
+  const [mapCenter, setMapCenter] = useState<[number, number]>(defaultCenter);
+  const [mapZoom, setMapZoom] = useState(12);
 
   const handleMarkerClick = (hospital: Hospital) => {
     setSelectedHospital(hospital);
-    setMapCenter({ lat: hospital.lat, lng: hospital.lng });
-    if (map) {
-      map.panTo({ lat: hospital.lat, lng: hospital.lng });
-      map.setZoom(14);
-    }
+    setMapCenter([hospital.lat, hospital.lng]);
+    setMapZoom(14);
   };
 
   const statusCounts = {
@@ -72,7 +88,12 @@ function MapContent({ hospitals }: { hospitals: Hospital[] }) {
   };
 
   return (
-    <>
+    <SectionCard
+      id="map"
+      title="Hospital Map View"
+      subtitle="Interactive map showing all 15 Pune hospitals with real-time status indicators."
+      icon={<MapIcon className="w-6 h-6 text-primary-foreground" />}
+    >
       {/* Legend */}
       <div className="flex flex-wrap items-center gap-4 mb-4">
         <div className="flex items-center gap-2">
@@ -106,81 +127,60 @@ function MapContent({ hospitals }: { hospitals: Hospital[] }) {
         animate={{ height: isExpanded ? 600 : 400 }}
         transition={{ duration: 0.3 }}
       >
-        <GoogleMap
-          mapContainerStyle={mapContainerStyle}
-          center={mapCenter}
+        <MapContainer
+          center={defaultCenter}
           zoom={12}
-          onLoad={onLoad}
-          onUnmount={onUnmount}
-          options={{
-            styles: [
-              { elementType: 'geometry', stylers: [{ color: '#242f3e' }] },
-              { elementType: 'labels.text.stroke', stylers: [{ color: '#242f3e' }] },
-              { elementType: 'labels.text.fill', stylers: [{ color: '#746855' }] },
-              { featureType: 'administrative.locality', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
-              { featureType: 'poi', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
-              { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#263c3f' }] },
-              { featureType: 'poi.park', elementType: 'labels.text.fill', stylers: [{ color: '#6b9a76' }] },
-              { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#38414e' }] },
-              { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#212a37' }] },
-              { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#9ca5b3' }] },
-              { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#746855' }] },
-              { featureType: 'road.highway', elementType: 'geometry.stroke', stylers: [{ color: '#1f2835' }] },
-              { featureType: 'road.highway', elementType: 'labels.text.fill', stylers: [{ color: '#f3d19c' }] },
-              { featureType: 'transit', elementType: 'geometry', stylers: [{ color: '#2f3948' }] },
-              { featureType: 'transit.station', elementType: 'labels.text.fill', stylers: [{ color: '#d59563' }] },
-              { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#17263c' }] },
-              { featureType: 'water', elementType: 'labels.text.fill', stylers: [{ color: '#515c6d' }] },
-              { featureType: 'water', elementType: 'labels.text.stroke', stylers: [{ color: '#17263c' }] },
-            ],
-            disableDefaultUI: false,
-            zoomControl: true,
-            mapTypeControl: false,
-            streetViewControl: false,
-            fullscreenControl: false,
-          }}
+          style={{ width: '100%', height: '100%' }}
+          zoomControl={true}
+          scrollWheelZoom={true}
         >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          
+          <MapController center={mapCenter} zoom={mapZoom} />
+          
           {hospitals.map((hospital) => (
-            <MarkerF
+            <Marker
               key={hospital.id}
-              position={{ lat: hospital.lat, lng: hospital.lng }}
-              icon={getMarkerIcon(hospital.status)}
-              onClick={() => handleMarkerClick(hospital)}
-              onMouseOver={() => setHoveredHospital(hospital)}
-              onMouseOut={() => setHoveredHospital(null)}
-            />
-          ))}
-
-          {hoveredHospital && !selectedHospital && (
-            <InfoWindowF
-              position={{ lat: hoveredHospital.lat, lng: hoveredHospital.lng }}
-              onCloseClick={() => setHoveredHospital(null)}
+              position={[hospital.lat, hospital.lng]}
+              icon={createMarkerIcon(hospital.status)}
+              eventHandlers={{
+                click: () => handleMarkerClick(hospital),
+              }}
             >
-              <div className="p-1 min-w-[200px]">
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <h3 className="font-semibold text-sm text-gray-900">{hoveredHospital.name}</h3>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-                    hoveredHospital.status === 'normal' ? 'bg-emerald-100 text-emerald-700' :
-                    hoveredHospital.status === 'busy' ? 'bg-amber-100 text-amber-700' :
-                    'bg-rose-100 text-rose-700'
-                  }`}>
-                    {hoveredHospital.status}
-                  </span>
-                </div>
-                <div className="space-y-1 text-xs text-gray-600">
-                  <div className="flex items-center gap-2">
-                    <Bed className="w-3 h-3" />
-                    <span>{hoveredHospital.available_beds} beds available</span>
+              <Popup>
+                <div className="p-1 min-w-[200px]">
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <h3 className="font-semibold text-sm text-gray-900">{hospital.name}</h3>
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                      hospital.status === 'normal' ? 'bg-emerald-100 text-emerald-700' :
+                      hospital.status === 'busy' ? 'bg-amber-100 text-amber-700' :
+                      'bg-rose-100 text-rose-700'
+                    }`}>
+                      {hospital.status}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Star className="w-3 h-3 text-amber-500" />
-                    <span>{hoveredHospital.rating} ({hoveredHospital.reviewCount.toLocaleString()} reviews)</span>
+                  <div className="space-y-1 text-xs text-gray-600">
+                    <div className="flex items-center gap-2">
+                      <Bed className="w-3 h-3" />
+                      <span>{hospital.available_beds} beds available</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Users className="w-3 h-3" />
+                      <span>{hospital.doctors_available} doctors</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Star className="w-3 h-3 text-amber-500" />
+                      <span>{hospital.rating} ({hospital.reviewCount.toLocaleString()} reviews)</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </InfoWindowF>
-          )}
-        </GoogleMap>
+              </Popup>
+            </Marker>
+          ))}
+        </MapContainer>
 
         {/* Selected Hospital Detail Panel */}
         <AnimatePresence>
@@ -308,75 +308,6 @@ function MapContent({ hospitals }: { hospitals: Hospital[] }) {
           ))}
         </div>
       </div>
-    </>
-  );
-}
-
-export function HospitalMap({ hospitals }: HospitalMapProps) {
-  const [apiKey, setApiKey] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchApiKey = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('get-maps-key');
-        if (error) throw error;
-        if (data?.apiKey) {
-          setApiKey(data.apiKey);
-        } else {
-          setError('API key not found');
-        }
-      } catch (err) {
-        console.error('Failed to fetch API key:', err);
-        setError('Failed to load map');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchApiKey();
-  }, []);
-
-  if (loading) {
-    return (
-      <SectionCard
-        id="map"
-        title="Hospital Map View"
-        subtitle="Interactive map showing all 15 Pune hospitals with real-time status indicators."
-        icon={<MapIcon className="w-6 h-6 text-primary-foreground" />}
-      >
-        <div className="flex items-center justify-center h-[400px] bg-muted/30 rounded-2xl">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      </SectionCard>
-    );
-  }
-
-  if (error || !apiKey) {
-    return (
-      <SectionCard
-        id="map"
-        title="Hospital Map View"
-        subtitle="Interactive map showing all 15 Pune hospitals with real-time status indicators."
-        icon={<MapIcon className="w-6 h-6 text-primary-foreground" />}
-      >
-        <div className="flex items-center justify-center h-[400px] bg-muted/30 rounded-2xl">
-          <p className="text-muted-foreground">Unable to load map</p>
-        </div>
-      </SectionCard>
-    );
-  }
-
-  return (
-    <SectionCard
-      id="map"
-      title="Hospital Map View"
-      subtitle="Interactive map showing all 15 Pune hospitals with real-time status indicators."
-      icon={<MapIcon className="w-6 h-6 text-primary-foreground" />}
-    >
-      <LoadScript googleMapsApiKey={apiKey}>
-        <MapContent hospitals={hospitals} />
-      </LoadScript>
     </SectionCard>
   );
 }
