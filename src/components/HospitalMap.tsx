@@ -40,38 +40,16 @@ const getMarkerIcon = (status: Hospital['status']) => {
   };
 };
 
-export function HospitalMap({ hospitals }: HospitalMapProps) {
+// Inner component that handles the Google Maps rendering
+function GoogleMapsContent({ hospitals, apiKey }: { hospitals: Hospital[]; apiKey: string }) {
   const [selectedHospital, setSelectedHospital] = useState<Hospital | null>(null);
   const [hoveredHospital, setHoveredHospital] = useState<Hospital | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [mapCenter, setMapCenter] = useState(defaultCenter);
   const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [apiKey, setApiKey] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchApiKey = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke('get-maps-key');
-        if (error) throw error;
-        if (data?.apiKey) {
-          setApiKey(data.apiKey);
-        } else {
-          setError('API key not found');
-        }
-      } catch (err) {
-        console.error('Failed to fetch API key:', err);
-        setError('Failed to load map');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchApiKey();
-  }, []);
 
   const { isLoaded, loadError } = useJsApiLoader({
-    googleMapsApiKey: apiKey || '',
+    googleMapsApiKey: apiKey,
     id: 'google-map-script',
   });
 
@@ -98,43 +76,16 @@ export function HospitalMap({ hospitals }: HospitalMapProps) {
     critical: hospitals.filter(h => h.status === 'critical').length,
   };
 
-  if (loading) {
+  if (loadError) {
     return (
-      <SectionCard
-        id="map"
-        title="Hospital Map View"
-        subtitle="Interactive map showing all 15 Pune hospitals with real-time status indicators."
-        icon={<MapIcon className="w-6 h-6 text-primary-foreground" />}
-      >
-        <div className="flex items-center justify-center h-[400px] bg-muted/30 rounded-2xl">
-          <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        </div>
-      </SectionCard>
-    );
-  }
-
-  if (error || loadError || !apiKey) {
-    return (
-      <SectionCard
-        id="map"
-        title="Hospital Map View"
-        subtitle="Interactive map showing all 15 Pune hospitals with real-time status indicators."
-        icon={<MapIcon className="w-6 h-6 text-primary-foreground" />}
-      >
-        <div className="flex items-center justify-center h-[400px] bg-muted/30 rounded-2xl">
-          <p className="text-muted-foreground">Unable to load map</p>
-        </div>
-      </SectionCard>
+      <div className="flex items-center justify-center h-[400px] bg-muted/30 rounded-2xl">
+        <p className="text-muted-foreground">Unable to load map</p>
+      </div>
     );
   }
 
   return (
-    <SectionCard
-      id="map"
-      title="Hospital Map View"
-      subtitle="Interactive map showing all 15 Pune hospitals with real-time status indicators."
-      icon={<MapIcon className="w-6 h-6 text-primary-foreground" />}
-    >
+    <>
       {/* Legend */}
       <div className="flex flex-wrap items-center gap-4 mb-4">
         <div className="flex items-center gap-2">
@@ -376,6 +327,73 @@ export function HospitalMap({ hospitals }: HospitalMapProps) {
           ))}
         </div>
       </div>
+    </>
+  );
+}
+
+export function HospitalMap({ hospitals }: HospitalMapProps) {
+  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchApiKey = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('get-maps-key');
+        if (error) throw error;
+        if (data?.apiKey) {
+          setApiKey(data.apiKey);
+        } else {
+          setError('API key not found');
+        }
+      } catch (err) {
+        console.error('Failed to fetch API key:', err);
+        setError('Failed to load map');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchApiKey();
+  }, []);
+
+  if (loading) {
+    return (
+      <SectionCard
+        id="map"
+        title="Hospital Map View"
+        subtitle="Interactive map showing all 15 Pune hospitals with real-time status indicators."
+        icon={<MapIcon className="w-6 h-6 text-primary-foreground" />}
+      >
+        <div className="flex items-center justify-center h-[400px] bg-muted/30 rounded-2xl">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </SectionCard>
+    );
+  }
+
+  if (error || !apiKey) {
+    return (
+      <SectionCard
+        id="map"
+        title="Hospital Map View"
+        subtitle="Interactive map showing all 15 Pune hospitals with real-time status indicators."
+        icon={<MapIcon className="w-6 h-6 text-primary-foreground" />}
+      >
+        <div className="flex items-center justify-center h-[400px] bg-muted/30 rounded-2xl">
+          <p className="text-muted-foreground">Unable to load map</p>
+        </div>
+      </SectionCard>
+    );
+  }
+
+  return (
+    <SectionCard
+      id="map"
+      title="Hospital Map View"
+      subtitle="Interactive map showing all 15 Pune hospitals with real-time status indicators."
+      icon={<MapIcon className="w-6 h-6 text-primary-foreground" />}
+    >
+      <GoogleMapsContent hospitals={hospitals} apiKey={apiKey} />
     </SectionCard>
   );
 }
