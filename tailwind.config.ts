@@ -15,6 +15,8 @@ export default {
     extend: {
       fontFamily: {
         sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'sans-serif'],
+        display: ['Space Grotesk', 'Inter', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'Menlo', 'Monaco', 'monospace'],
       },
       fontSize: {
         'display-2xl': ['4.5rem', { lineHeight: '1.1', letterSpacing: '-0.02em', fontWeight: '700' }],
@@ -98,12 +100,18 @@ export default {
         'glass': 'var(--glass-shadow)',
         'primary': 'var(--shadow-primary)',
         'primary-lg': 'var(--shadow-primary-lg)',
+        'glow': 'var(--shadow-glow)',
+        'glow-lg': '0 0 60px hsl(var(--primary) / 0.4), 0 0 100px hsl(var(--primary) / 0.2)',
+        'depth': '0 1px 1px hsl(0 0% 0% / 0.02), 0 2px 2px hsl(0 0% 0% / 0.02), 0 4px 4px hsl(0 0% 0% / 0.02), 0 8px 8px hsl(0 0% 0% / 0.02), 0 16px 16px hsl(0 0% 0% / 0.02)',
+        'inner': 'inset 0 2px 4px 0 hsl(0 0% 0% / 0.05)',
       },
       backgroundImage: {
         'gradient-primary': 'var(--gradient-primary)',
         'gradient-primary-soft': 'var(--gradient-primary-soft)',
         'gradient-hero': 'var(--gradient-hero)',
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+        'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
+        'gradient-mesh': 'var(--gradient-mesh)',
       },
       transitionTimingFunction: {
         'smooth': 'cubic-bezier(0.4, 0, 0.2, 1)',
@@ -115,6 +123,19 @@ export default {
         'base': '200ms',
         'smooth': '300ms',
         'slow': '500ms',
+        '600': '600ms',
+        '800': '800ms',
+        '1000': '1000ms',
+      },
+      scale: {
+        '102': '1.02',
+        '103': '1.03',
+        '98': '0.98',
+        '97': '0.97',
+      },
+      backdropBlur: {
+        'xs': '2px',
+        '3xl': '64px',
       },
       keyframes: {
         "accordion-down": {
@@ -137,6 +158,41 @@ export default {
           "0%": { transform: "translateX(100%)", opacity: "0" },
           "100%": { transform: "translateX(0)", opacity: "1" },
         },
+        "float": {
+          "0%, 100%": { transform: "translateY(0px) rotate(0deg)" },
+          "33%": { transform: "translateY(-10px) rotate(1deg)" },
+          "66%": { transform: "translateY(5px) rotate(-1deg)" },
+        },
+        "pulse-soft": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.7" },
+        },
+        "morph": {
+          "0%, 100%": { borderRadius: "60% 40% 30% 70% / 60% 30% 70% 40%" },
+          "25%": { borderRadius: "30% 60% 70% 40% / 50% 60% 30% 60%" },
+          "50%": { borderRadius: "50% 60% 30% 60% / 30% 60% 70% 40%" },
+          "75%": { borderRadius: "60% 40% 60% 30% / 70% 30% 50% 60%" },
+        },
+        "spin-slow": {
+          "0%": { transform: "rotate(0deg)" },
+          "100%": { transform: "rotate(360deg)" },
+        },
+        "counter-spin": {
+          "0%": { transform: "rotate(0deg)" },
+          "100%": { transform: "rotate(-360deg)" },
+        },
+        "bounce-gentle": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(8px)" },
+        },
+        "shimmer": {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+        "gradient-shift": {
+          "0%": { backgroundPosition: "0% center" },
+          "100%": { backgroundPosition: "200% center" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -144,6 +200,15 @@ export default {
         "fade-in": "fade-in 0.4s ease-out forwards",
         "scale-in": "scale-in 0.3s ease-out forwards",
         "slide-in-right": "slide-in-right 0.3s ease-out forwards",
+        "float": "float 6s ease-in-out infinite",
+        "float-delayed": "float 6s ease-in-out 2s infinite",
+        "pulse-soft": "pulse-soft 2s ease-in-out infinite",
+        "morph": "morph 8s ease-in-out infinite",
+        "spin-slow": "spin-slow 20s linear infinite",
+        "counter-spin": "counter-spin 15s linear infinite",
+        "bounce-gentle": "bounce-gentle 2s ease-in-out infinite",
+        "shimmer": "shimmer 2s infinite",
+        "gradient-shift": "gradient-shift 4s linear infinite",
       },
     },
   },
