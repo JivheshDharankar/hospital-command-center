@@ -14,16 +14,215 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      bed_updates: {
+        Row: {
+          created_at: string | null
+          hospital_id: string
+          id: string
+          new_beds: number
+          previous_beds: number
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          hospital_id: string
+          id?: string
+          new_beds: number
+          previous_beds: number
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          hospital_id?: string
+          id?: string
+          new_beds?: number
+          previous_beds?: number
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bed_updates_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      contact_submissions: {
+        Row: {
+          created_at: string | null
+          email: string
+          id: string
+          message: string | null
+          name: string
+          organization: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email: string
+          id?: string
+          message?: string | null
+          name: string
+          organization?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string
+          id?: string
+          message?: string | null
+          name?: string
+          organization?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      hospitals: {
+        Row: {
+          accreditations: string[] | null
+          address: string
+          ambulance_count: number | null
+          available_beds: number
+          created_at: string | null
+          doctors_available: number
+          emergency_available: boolean | null
+          established: number | null
+          icu_beds: number | null
+          id: string
+          insurance: Json | null
+          lat: number
+          lng: number
+          name: string
+          nicu_available: boolean | null
+          phone: string
+          rating: number | null
+          review_count: number | null
+          specialties: Json | null
+          status: string
+          total_beds: number
+          type: string
+          updated_at: string | null
+          website: string | null
+        }
+        Insert: {
+          accreditations?: string[] | null
+          address: string
+          ambulance_count?: number | null
+          available_beds?: number
+          created_at?: string | null
+          doctors_available?: number
+          emergency_available?: boolean | null
+          established?: number | null
+          icu_beds?: number | null
+          id?: string
+          insurance?: Json | null
+          lat: number
+          lng: number
+          name: string
+          nicu_available?: boolean | null
+          phone: string
+          rating?: number | null
+          review_count?: number | null
+          specialties?: Json | null
+          status?: string
+          total_beds?: number
+          type: string
+          updated_at?: string | null
+          website?: string | null
+        }
+        Update: {
+          accreditations?: string[] | null
+          address?: string
+          ambulance_count?: number | null
+          available_beds?: number
+          created_at?: string | null
+          doctors_available?: number
+          emergency_available?: boolean | null
+          established?: number | null
+          icu_beds?: number | null
+          id?: string
+          insurance?: Json | null
+          lat?: number
+          lng?: number
+          name?: string
+          nicu_available?: boolean | null
+          phone?: string
+          rating?: number | null
+          review_count?: number | null
+          specialties?: Json | null
+          status?: string
+          total_beds?: number
+          type?: string
+          updated_at?: string | null
+          website?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          full_name: string | null
+          id: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          full_name?: string | null
+          id?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +349,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
