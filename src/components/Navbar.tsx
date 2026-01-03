@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Activity, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { UserMenu } from '@/components/UserMenu';
 
 const navLinks = [
   { href: '#top', label: 'Home' },
@@ -88,12 +89,12 @@ export function Navbar() {
             ))}
           </ul>
 
-          {/* Desktop CTA */}
+          {/* Desktop CTA + User Menu */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.5 }}
-            className="hidden lg:block"
+            className="hidden lg:flex items-center gap-3"
           >
             <a href="#dashboard">
               <Button 
@@ -104,20 +105,24 @@ export function Navbar() {
                 Open Demo
               </Button>
             </a>
+            <UserMenu />
           </motion.div>
 
           {/* Mobile Menu Button */}
-          <button
-            onClick={() => setMobileOpen(!mobileOpen)}
-            className={cn(
-              'lg:hidden p-2 rounded-lg transition-colors',
-              scrolled 
-                ? 'text-foreground hover:bg-accent' 
-                : 'text-primary-foreground hover:bg-primary-foreground/10'
-            )}
-          >
-            {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+          <div className="flex items-center gap-2 lg:hidden">
+            <UserMenu />
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className={cn(
+                'p-2 rounded-lg transition-colors',
+                scrolled 
+                  ? 'text-foreground hover:bg-accent' 
+                  : 'text-primary-foreground hover:bg-primary-foreground/10'
+              )}
+            >
+              {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
+          </div>
         </div>
       </motion.nav>
 
