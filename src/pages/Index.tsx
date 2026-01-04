@@ -16,9 +16,10 @@ import { ContactForm } from '@/components/ContactForm';
 import { Footer } from '@/components/Footer';
 import { useHospitals } from '@/hooks/useHospitals';
 import { useQueueSimulation } from '@/hooks/useQueueSimulation';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Index = () => {
-  const { hospitals, updateHospital, getTotalOccupancy } = useHospitals();
+  const { hospitals, loading, error, getTotalOccupancy } = useHospitals();
   const { events, isRunning, toggleSimulation } = useQueueSimulation(hospitals);
 
   return (
@@ -35,13 +36,26 @@ const Index = () => {
       <Departments />
 
       <div className="container mx-auto px-4 space-y-8 pb-16">
-        <HospitalDashboard hospitals={hospitals} />
-        <HospitalMap hospitals={hospitals} />
-        <SurgeOrchestration occupancy={getTotalOccupancy()} />
-        <CohortFinder />
-        <SymptomChecker />
-        <NearbyHospitals hospitals={hospitals} />
-        <AdminPanel hospitals={hospitals} onUpdate={updateHospital} />
+        {loading ? (
+          <div className="space-y-8">
+            <Skeleton className="h-96 w-full rounded-2xl" />
+            <Skeleton className="h-96 w-full rounded-2xl" />
+          </div>
+        ) : error ? (
+          <div className="p-8 rounded-2xl bg-destructive/10 border border-destructive/20 text-center">
+            <p className="text-destructive font-medium">Error loading hospitals: {error}</p>
+          </div>
+        ) : (
+          <>
+            <HospitalDashboard hospitals={hospitals} />
+            <HospitalMap hospitals={hospitals} />
+            <SurgeOrchestration occupancy={getTotalOccupancy()} />
+            <CohortFinder />
+            <SymptomChecker />
+            <NearbyHospitals hospitals={hospitals} />
+            <AdminPanel hospitals={hospitals} />
+          </>
+        )}
         <SystemArchitecture />
         <ContactForm />
       </div>

@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input';
 import { SectionCard } from './SectionCard';
 import { Mail, Send, CheckCircle2, User, Building2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuthContext } from '@/contexts/AuthContext';
 
 export function ContactForm() {
   const [name, setName] = useState('');
@@ -13,8 +15,9 @@ export function ContactForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuthContext();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!name || !email) {
@@ -26,28 +29,54 @@ export function ContactForm() {
       return;
     }
 
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      toast({
+        title: 'Error',
+        description: 'Please enter a valid email address.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     
-    // Simulate submission
-    setTimeout(() => {
-      console.log('Contact request:', { name, email, organization: org });
-      
-      setIsSubmitting(false);
-      setIsSubmitted(true);
-      
-      toast({
-        title: 'Message Sent',
-        description: 'Thanks! We\'ll get back to you soon.',
+    const { error } = await supabase
+      .from('contact_submissions')
+      .insert({
+        name,
+        email,
+        organization: org || null,
+        user_id: user?.id || null,
       });
 
-      // Reset after showing success
-      setTimeout(() => {
-        setName('');
-        setEmail('');
-        setOrg('');
-        setIsSubmitted(false);
-      }, 3000);
-    }, 1000);
+    setIsSubmitting(false);
+
+    if (error) {
+      console.error('Error submitting contact form:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to send message. Please try again.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSubmitted(true);
+    
+    toast({
+      title: 'Message Sent',
+      description: 'Thanks! We\'ll get back to you soon.',
+    });
+
+    // Reset after showing success
+    setTimeout(() => {
+      setName('');
+      setEmail('');
+      setOrg('');
+      setIsSubmitted(false);
+    }, 3000);
   };
 
   return (
