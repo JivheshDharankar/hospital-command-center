@@ -44,6 +44,13 @@ export type Database = {
             foreignKeyName: "bed_updates_hospital_id_fkey"
             columns: ["hospital_id"]
             isOneToOne: false
+            referencedRelation: "hospital_analytics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bed_updates_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
             referencedRelation: "hospitals"
             referencedColumns: ["id"]
           },
@@ -78,6 +85,57 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      hospital_alerts: {
+        Row: {
+          acknowledged: boolean | null
+          acknowledged_at: string | null
+          acknowledged_by: string | null
+          alert_type: string
+          created_at: string | null
+          hospital_id: string
+          id: string
+          message: string
+          severity: string | null
+        }
+        Insert: {
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type: string
+          created_at?: string | null
+          hospital_id: string
+          id?: string
+          message: string
+          severity?: string | null
+        }
+        Update: {
+          acknowledged?: boolean | null
+          acknowledged_at?: string | null
+          acknowledged_by?: string | null
+          alert_type?: string
+          created_at?: string | null
+          hospital_id?: string
+          id?: string
+          message?: string
+          severity?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hospital_alerts_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospital_analytics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hospital_alerts_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       hospitals: {
         Row: {
@@ -187,6 +245,36 @@ export type Database = {
         }
         Relationships: []
       }
+      triage_logs: {
+        Row: {
+          ai_response: Json
+          created_at: string | null
+          id: string
+          recommended_department: string | null
+          symptoms: string
+          urgency_level: string | null
+          user_id: string | null
+        }
+        Insert: {
+          ai_response: Json
+          created_at?: string | null
+          id?: string
+          recommended_department?: string | null
+          symptoms: string
+          urgency_level?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          ai_response?: Json
+          created_at?: string | null
+          id?: string
+          recommended_department?: string | null
+          symptoms?: string
+          urgency_level?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null
@@ -210,7 +298,45 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      hospital_analytics: {
+        Row: {
+          active_alerts: number | null
+          available_beds: number | null
+          doctors_available: number | null
+          id: string | null
+          name: string | null
+          occupancy_rate: number | null
+          status: string | null
+          total_beds: number | null
+          total_updates: number | null
+          type: string | null
+        }
+        Insert: {
+          active_alerts?: never
+          available_beds?: number | null
+          doctors_available?: number | null
+          id?: string | null
+          name?: string | null
+          occupancy_rate?: never
+          status?: string | null
+          total_beds?: number | null
+          total_updates?: never
+          type?: string | null
+        }
+        Update: {
+          active_alerts?: never
+          available_beds?: number | null
+          doctors_available?: number | null
+          id?: string | null
+          name?: string | null
+          occupancy_rate?: never
+          status?: string | null
+          total_beds?: number | null
+          total_updates?: never
+          type?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
