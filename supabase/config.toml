@@ -1,1 +1,10 @@
 project_id = "ewoogkppvrvdrjetepkb"
+
+[functions.get-maps-key]
+verify_jwt = false
+
+[functions.analyze-symptoms]
+verify_jwt = false
+
+[functions.hospital-analytics]
+verify_jwt = false
