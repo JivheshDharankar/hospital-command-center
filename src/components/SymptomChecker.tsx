@@ -4,18 +4,39 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { SectionCard } from './SectionCard';
 import { RiskBadge } from './RiskBadge';
-import { analyzeSymptoms, getWhatIfAnalysis } from '@/utils/triage';
 import { TriageResult } from '@/types/hospital';
 import { Stethoscope, Sparkles, AlertTriangle, Building2, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+
+interface AITriageResponse {
+  urgency_level: 'low' | 'medium' | 'high' | 'emergency';
+  recommended_department: string;
+  message: string;
+  risk_signals: string[];
+  what_if_analysis: string;
+}
+
+function mapUrgencyToRisk(urgency: AITriageResponse['urgency_level']): TriageResult['risk'] {
+  switch (urgency) {
+    case 'emergency':
+    case 'high':
+      return 'High';
+    case 'medium':
+      return 'Medium';
+    default:
+      return 'Low';
+  }
+}
 
 export function SymptomChecker() {
   const [symptoms, setSymptoms] = useState('');
   const [result, setResult] = useState<TriageResult | null>(null);
+  const [whatIfAnalysis, setWhatIfAnalysis] = useState<string>('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const { toast } = useToast();
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     if (!symptoms.trim()) {
       toast({
         title: 'Enter Symptoms',
@@ -26,17 +47,39 @@ export function SymptomChecker() {
     }
 
     setIsAnalyzing(true);
-    
-    // Simulate AI processing
-    setTimeout(() => {
-      const analysis = analyzeSymptoms(symptoms);
-      setResult(analysis);
-      setIsAnalyzing(false);
-      toast({
-        title: 'Triage Complete',
-        description: 'Symptom analysis has been performed.',
+    setResult(null);
+    setWhatIfAnalysis('');
+
+    try {
+      const { data, error } = await supabase.functions.invoke<AITriageResponse>('analyze-symptoms', {
+        body: { symptoms: symptoms.trim() },
       });
-    }, 800);
+
+      if (error) throw error;
+
+      if (data) {
+        setResult({
+          risk: mapUrgencyToRisk(data.urgency_level),
+          department: data.recommended_department,
+          message: data.message,
+          keywords: data.risk_signals || [],
+        });
+        setWhatIfAnalysis(data.what_if_analysis || '');
+        toast({
+          title: 'AI Triage Complete',
+          description: 'Symptom analysis powered by AI.',
+        });
+      }
+    } catch (err) {
+      console.error('Error analyzing symptoms:', err);
+      toast({
+        title: 'Analysis Failed',
+        description: 'Could not analyze symptoms. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   return (
@@ -163,7 +206,7 @@ export function SymptomChecker() {
               )}
 
               {/* What-if */}
-              {getWhatIfAnalysis(result.risk) && (
+              {whatIfAnalysis && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -174,7 +217,7 @@ export function SymptomChecker() {
                     What-if Analysis
                   </span>
                   <p className="text-sm text-muted-foreground">
-                    {getWhatIfAnalysis(result.risk)}
+                    {whatIfAnalysis}
                   </p>
                 </motion.div>
               )}
