@@ -15,7 +15,7 @@ import { SystemArchitecture } from '@/components/SystemArchitecture';
 import { ContactForm } from '@/components/ContactForm';
 import { Footer } from '@/components/Footer';
 import { HospitalAlerts } from '@/components/HospitalAlerts';
-import { AnalyticsDashboard } from '@/components/AnalyticsDashboard';
+
 import { useHospitals } from '@/hooks/useHospitals';
 import { useQueueSimulation } from '@/hooks/useQueueSimulation';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -51,7 +51,6 @@ const Index = () => {
         ) : (
           <>
             <HospitalDashboard hospitals={hospitals} />
-            <AnalyticsDashboard />
             <HospitalMap hospitals={hospitals} />
             <SurgeOrchestration occupancy={getTotalOccupancy()} />
             <CohortFinder />
