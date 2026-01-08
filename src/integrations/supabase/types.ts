@@ -245,6 +245,39 @@ export type Database = {
         }
         Relationships: []
       }
+      queue_events: {
+        Row: {
+          created_at: string | null
+          department: string
+          event_time: string | null
+          hospital_name: string
+          id: string
+          patient_name: string
+          processed: boolean | null
+          risk: string
+        }
+        Insert: {
+          created_at?: string | null
+          department: string
+          event_time?: string | null
+          hospital_name: string
+          id?: string
+          patient_name: string
+          processed?: boolean | null
+          risk: string
+        }
+        Update: {
+          created_at?: string | null
+          department?: string
+          event_time?: string | null
+          hospital_name?: string
+          id?: string
+          patient_name?: string
+          processed?: boolean | null
+          risk?: string
+        }
+        Relationships: []
+      }
       triage_logs: {
         Row: {
           ai_response: Json
