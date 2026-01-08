@@ -16,7 +16,7 @@ export function QueueSimulation({ events, isRunning, onToggle }: QueueSimulation
     <SectionCard
       id="queue"
       title="Incoming Queue Simulation"
-      subtitle="Simulates patients entering the system and being routed based on risk and capacity."
+      subtitle="Real-time patient intake feed — data persists across sessions."
       icon={<Users className="w-6 h-6 text-primary-foreground" />}
     >
       <div className="flex items-center gap-4 mb-6">
