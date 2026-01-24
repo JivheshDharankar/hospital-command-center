@@ -86,6 +86,54 @@ export type Database = {
         }
         Relationships: []
       }
+      department_stats: {
+        Row: {
+          avg_wait_minutes: number
+          capacity: number
+          current_queue: number
+          department: string
+          hospital_id: string
+          id: string
+          staff_count: number
+          updated_at: string
+        }
+        Insert: {
+          avg_wait_minutes?: number
+          capacity?: number
+          current_queue?: number
+          department: string
+          hospital_id: string
+          id?: string
+          staff_count?: number
+          updated_at?: string
+        }
+        Update: {
+          avg_wait_minutes?: number
+          capacity?: number
+          current_queue?: number
+          department?: string
+          hospital_id?: string
+          id?: string
+          staff_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "department_stats_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospital_analytics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "department_stats_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       hospital_alerts: {
         Row: {
           acknowledged: boolean | null
@@ -372,6 +420,42 @@ export type Database = {
       }
     }
     Functions: {
+      calculate_queue_counts: {
+        Args: never
+        Returns: {
+          avg_wait: number
+          department: string
+          hospitals_count: number
+          total_queue: number
+        }[]
+      }
+      get_cohort_statistics: {
+        Args: never
+        Returns: {
+          cohort_name: string
+          patient_count: number
+          risk_level: string
+          trend_percent: number
+        }[]
+      }
+      get_dashboard_stats: {
+        Args: never
+        Returns: {
+          avg_triage_seconds: number
+          critical_units: number
+          total_hospitals: number
+        }[]
+      }
+      get_surge_prediction: {
+        Args: never
+        Returns: {
+          current_occupancy: number
+          predicted_occupancy: number
+          prediction_window_minutes: number
+          recommended_actions: Json
+          surge_risk: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
