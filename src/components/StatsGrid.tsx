@@ -1,5 +1,7 @@
 import { motion } from 'framer-motion';
 import { Building2, HeartPulse, Timer } from 'lucide-react';
+import { useDashboardStats } from '@/hooks/useDashboardStats';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface Stat {
   icon: typeof Building2;
@@ -8,32 +10,46 @@ interface Stat {
   color: string;
 }
 
-const stats: Stat[] = [
-  { 
-    icon: Building2, 
-    value: '4 Hospitals', 
-    label: 'City-wide view across emergency and OPD',
-    color: 'from-blue-500 to-indigo-500'
-  },
-  { 
-    icon: HeartPulse, 
-    value: '3 Critical Units', 
-    label: 'Emergency, Cardiology, Neurology',
-    color: 'from-rose-500 to-pink-500'
-  },
-  { 
-    icon: Timer, 
-    value: 'Under 60s', 
-    label: 'From symptom entry to triage decision',
-    color: 'from-emerald-500 to-teal-500'
-  },
-];
-
 export function StatsGrid() {
+  const { stats, loading } = useDashboardStats();
+
+  const dynamicStats: Stat[] = [
+    { 
+      icon: Building2, 
+      value: `${stats.totalHospitals} Hospitals`, 
+      label: 'City-wide view across emergency and OPD',
+      color: 'from-blue-500 to-indigo-500'
+    },
+    { 
+      icon: HeartPulse, 
+      value: `${stats.criticalUnits} Critical Units`, 
+      label: 'Hospitals at critical capacity',
+      color: 'from-rose-500 to-pink-500'
+    },
+    { 
+      icon: Timer, 
+      value: `Under ${stats.avgTriageSeconds}s`, 
+      label: 'From symptom entry to triage decision',
+      color: 'from-emerald-500 to-teal-500'
+    },
+  ];
+
+  if (loading) {
+    return (
+      <section className="container mx-auto px-4 -mt-8 md:-mt-12 relative z-20">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-36 rounded-2xl" />
+          ))}
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="container mx-auto px-4 -mt-8 md:-mt-12 relative z-20">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-        {stats.map((stat, i) => (
+        {dynamicStats.map((stat, i) => (
           <motion.div
             key={i}
             initial={{ opacity: 0, y: 30 }}
