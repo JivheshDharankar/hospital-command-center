@@ -52,7 +52,7 @@ const Index = () => {
           <>
             <HospitalDashboard hospitals={hospitals} />
             <HospitalMap hospitals={hospitals} />
-            <SurgeOrchestration occupancy={getTotalOccupancy()} />
+            <SurgeOrchestration />
             <CohortFinder />
             <SymptomChecker />
             <NearbyHospitals hospitals={hospitals} />
