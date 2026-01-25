@@ -950,30 +950,6 @@ export type Database = {
           total_updates: number | null
           type: string | null
         }
-        Insert: {
-          active_alerts?: never
-          available_beds?: number | null
-          doctors_available?: number | null
-          id?: string | null
-          name?: string | null
-          occupancy_rate?: never
-          status?: string | null
-          total_beds?: number | null
-          total_updates?: never
-          type?: string | null
-        }
-        Update: {
-          active_alerts?: never
-          available_beds?: number | null
-          doctors_available?: number | null
-          id?: string | null
-          name?: string | null
-          occupancy_rate?: never
-          status?: string | null
-          total_beds?: number | null
-          total_updates?: never
-          type?: string | null
-        }
         Relationships: []
       }
     }
