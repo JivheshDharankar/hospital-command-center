@@ -14,6 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
+      ambulances: {
+        Row: {
+          created_at: string | null
+          crew_count: number | null
+          current_lat: number | null
+          current_lng: number | null
+          equipment: Json | null
+          hospital_id: string
+          id: string
+          last_update: string | null
+          registration_number: string
+          status: string
+        }
+        Insert: {
+          created_at?: string | null
+          crew_count?: number | null
+          current_lat?: number | null
+          current_lng?: number | null
+          equipment?: Json | null
+          hospital_id: string
+          id?: string
+          last_update?: string | null
+          registration_number: string
+          status?: string
+        }
+        Update: {
+          created_at?: string | null
+          crew_count?: number | null
+          current_lat?: number | null
+          current_lng?: number | null
+          equipment?: Json | null
+          hospital_id?: string
+          id?: string
+          last_update?: string | null
+          registration_number?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ambulances_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospital_analytics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ambulances_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      analytics_snapshots: {
+        Row: {
+          avg_wait_minutes: number
+          created_at: string | null
+          critical_events: number
+          hospital_id: string | null
+          id: string
+          occupancy_rate: number
+          snapshot_date: string
+          total_patients: number
+        }
+        Insert: {
+          avg_wait_minutes?: number
+          created_at?: string | null
+          critical_events?: number
+          hospital_id?: string | null
+          id?: string
+          occupancy_rate?: number
+          snapshot_date?: string
+          total_patients?: number
+        }
+        Update: {
+          avg_wait_minutes?: number
+          created_at?: string | null
+          critical_events?: number
+          hospital_id?: string | null
+          id?: string
+          occupancy_rate?: number
+          snapshot_date?: string
+          total_patients?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analytics_snapshots_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospital_analytics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analytics_snapshots_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bed_updates: {
         Row: {
           created_at: string | null
@@ -128,6 +230,88 @@ export type Database = {
           {
             foreignKeyName: "department_stats_hospital_id_fkey"
             columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dispatch_requests: {
+        Row: {
+          ambulance_id: string | null
+          arrived_at: string | null
+          completed_at: string | null
+          created_at: string | null
+          destination_hospital_id: string
+          dispatched_at: string | null
+          eta_minutes: number | null
+          id: string
+          notes: string | null
+          origin_address: string | null
+          origin_lat: number
+          origin_lng: number
+          patient_condition: string
+          priority: string
+          requested_at: string | null
+          requested_by: string | null
+          status: string
+        }
+        Insert: {
+          ambulance_id?: string | null
+          arrived_at?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          destination_hospital_id: string
+          dispatched_at?: string | null
+          eta_minutes?: number | null
+          id?: string
+          notes?: string | null
+          origin_address?: string | null
+          origin_lat: number
+          origin_lng: number
+          patient_condition: string
+          priority?: string
+          requested_at?: string | null
+          requested_by?: string | null
+          status?: string
+        }
+        Update: {
+          ambulance_id?: string | null
+          arrived_at?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          destination_hospital_id?: string
+          dispatched_at?: string | null
+          eta_minutes?: number | null
+          id?: string
+          notes?: string | null
+          origin_address?: string | null
+          origin_lat?: number
+          origin_lng?: number
+          patient_condition?: string
+          priority?: string
+          requested_at?: string | null
+          requested_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispatch_requests_ambulance_id_fkey"
+            columns: ["ambulance_id"]
+            isOneToOne: false
+            referencedRelation: "ambulances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispatch_requests_destination_hospital_id_fkey"
+            columns: ["destination_hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospital_analytics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispatch_requests_destination_hospital_id_fkey"
+            columns: ["destination_hospital_id"]
             isOneToOne: false
             referencedRelation: "hospitals"
             referencedColumns: ["id"]
@@ -266,6 +450,252 @@ export type Database = {
         }
         Relationships: []
       }
+      journey_events: {
+        Row: {
+          created_at: string | null
+          department: string | null
+          details: Json | null
+          event_time: string | null
+          event_type: string
+          id: string
+          journey_id: string
+          staff_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          department?: string | null
+          details?: Json | null
+          event_time?: string | null
+          event_type: string
+          id?: string
+          journey_id: string
+          staff_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          department?: string | null
+          details?: Json | null
+          event_time?: string | null
+          event_type?: string
+          id?: string
+          journey_id?: string
+          staff_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "journey_events_journey_id_fkey"
+            columns: ["journey_id"]
+            isOneToOne: false
+            referencedRelation: "patient_journeys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_preferences: {
+        Row: {
+          capacity_warnings: boolean | null
+          created_at: string | null
+          critical_alerts: boolean | null
+          email_digest: string | null
+          id: string
+          patient_updates: boolean | null
+          transfer_requests: boolean | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          capacity_warnings?: boolean | null
+          created_at?: string | null
+          critical_alerts?: boolean | null
+          email_digest?: string | null
+          id?: string
+          patient_updates?: boolean | null
+          transfer_requests?: boolean | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          capacity_warnings?: boolean | null
+          created_at?: string | null
+          critical_alerts?: boolean | null
+          email_digest?: string | null
+          id?: string
+          patient_updates?: boolean | null
+          transfer_requests?: boolean | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notification_subscriptions: {
+        Row: {
+          auth_key: string
+          created_at: string | null
+          id: string
+          p256dh_key: string
+          subscription_endpoint: string
+          user_id: string
+        }
+        Insert: {
+          auth_key: string
+          created_at?: string | null
+          id?: string
+          p256dh_key: string
+          subscription_endpoint: string
+          user_id: string
+        }
+        Update: {
+          auth_key?: string
+          created_at?: string | null
+          id?: string
+          p256dh_key?: string
+          subscription_endpoint?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          action_url: string | null
+          created_at: string | null
+          id: string
+          message: string
+          read: boolean | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          action_url?: string | null
+          created_at?: string | null
+          id?: string
+          message: string
+          read?: boolean | null
+          title: string
+          type?: string
+          user_id: string
+        }
+        Update: {
+          action_url?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string
+          read?: boolean | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      patient_journeys: {
+        Row: {
+          admission_type: string
+          admitted_at: string | null
+          attending_doctor: string | null
+          bed_id: string | null
+          created_at: string | null
+          department: string
+          discharged_at: string | null
+          hospital_id: string
+          id: string
+          notes: string | null
+          patient_id: string
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          admission_type: string
+          admitted_at?: string | null
+          attending_doctor?: string | null
+          bed_id?: string | null
+          created_at?: string | null
+          department: string
+          discharged_at?: string | null
+          hospital_id: string
+          id?: string
+          notes?: string | null
+          patient_id: string
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          admission_type?: string
+          admitted_at?: string | null
+          attending_doctor?: string | null
+          bed_id?: string | null
+          created_at?: string | null
+          department?: string
+          discharged_at?: string | null
+          hospital_id?: string
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_journeys_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospital_analytics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_journeys_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_journeys_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patients: {
+        Row: {
+          allergies: Json | null
+          blood_type: string | null
+          created_at: string | null
+          date_of_birth: string | null
+          emergency_contact: string | null
+          id: string
+          mrn: string
+          name: string
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          allergies?: Json | null
+          blood_type?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          emergency_contact?: string | null
+          id?: string
+          mrn: string
+          name: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          allergies?: Json | null
+          blood_type?: string | null
+          created_at?: string | null
+          date_of_birth?: string | null
+          emergency_contact?: string | null
+          id?: string
+          mrn?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -325,6 +755,134 @@ export type Database = {
           risk?: string
         }
         Relationships: []
+      }
+      transfer_communications: {
+        Row: {
+          attachments: Json | null
+          created_at: string | null
+          id: string
+          message: string
+          sender_id: string
+          transfer_id: string
+        }
+        Insert: {
+          attachments?: Json | null
+          created_at?: string | null
+          id?: string
+          message: string
+          sender_id: string
+          transfer_id: string
+        }
+        Update: {
+          attachments?: Json | null
+          created_at?: string | null
+          id?: string
+          message?: string
+          sender_id?: string
+          transfer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transfer_communications_transfer_id_fkey"
+            columns: ["transfer_id"]
+            isOneToOne: false
+            referencedRelation: "transfer_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transfer_requests: {
+        Row: {
+          completed_at: string | null
+          created_at: string | null
+          destination_hospital_id: string
+          id: string
+          patient_journey_id: string | null
+          patient_name: string
+          reason: string
+          rejection_reason: string | null
+          requested_at: string | null
+          requested_by: string | null
+          responded_at: string | null
+          responded_by: string | null
+          source_hospital_id: string
+          specialty_needed: string | null
+          status: string
+          urgency: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string | null
+          destination_hospital_id: string
+          id?: string
+          patient_journey_id?: string | null
+          patient_name: string
+          reason: string
+          rejection_reason?: string | null
+          requested_at?: string | null
+          requested_by?: string | null
+          responded_at?: string | null
+          responded_by?: string | null
+          source_hospital_id: string
+          specialty_needed?: string | null
+          status?: string
+          urgency?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string | null
+          destination_hospital_id?: string
+          id?: string
+          patient_journey_id?: string | null
+          patient_name?: string
+          reason?: string
+          rejection_reason?: string | null
+          requested_at?: string | null
+          requested_by?: string | null
+          responded_at?: string | null
+          responded_by?: string | null
+          source_hospital_id?: string
+          specialty_needed?: string | null
+          status?: string
+          urgency?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transfer_requests_destination_hospital_id_fkey"
+            columns: ["destination_hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospital_analytics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_requests_destination_hospital_id_fkey"
+            columns: ["destination_hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_requests_patient_journey_id_fkey"
+            columns: ["patient_journey_id"]
+            isOneToOne: false
+            referencedRelation: "patient_journeys"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_requests_source_hospital_id_fkey"
+            columns: ["source_hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospital_analytics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transfer_requests_source_hospital_id_fkey"
+            columns: ["source_hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       triage_logs: {
         Row: {
@@ -429,6 +987,7 @@ export type Database = {
           total_queue: number
         }[]
       }
+      generate_daily_snapshot: { Args: never; Returns: undefined }
       get_cohort_statistics: {
         Args: never
         Returns: {
@@ -444,6 +1003,17 @@ export type Database = {
           avg_triage_seconds: number
           critical_units: number
           total_hospitals: number
+        }[]
+      }
+      get_historical_analytics: {
+        Args: { days?: number }
+        Returns: {
+          avg_occupancy: number
+          avg_wait: number
+          critical_events: number
+          hospital_count: number
+          snapshot_date: string
+          total_patients: number
         }[]
       }
       get_surge_prediction: {
