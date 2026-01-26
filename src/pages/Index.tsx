@@ -15,6 +15,10 @@ import { SystemArchitecture } from '@/components/SystemArchitecture';
 import { ContactForm } from '@/components/ContactForm';
 import { Footer } from '@/components/Footer';
 import { HospitalAlerts } from '@/components/HospitalAlerts';
+import HistoricalAnalytics from '@/components/HistoricalAnalytics';
+import PatientJourneyTimeline from '@/components/PatientJourneyTimeline';
+import AmbulanceDispatch from '@/components/AmbulanceDispatch';
+import HospitalTransfers from '@/components/HospitalTransfers';
 
 import { useHospitals } from '@/hooks/useHospitals';
 import { useQueueSimulation } from '@/hooks/useQueueSimulation';
@@ -51,9 +55,13 @@ const Index = () => {
         ) : (
           <>
             <HospitalDashboard hospitals={hospitals} />
+            <HistoricalAnalytics />
             <HospitalMap hospitals={hospitals} />
             <SurgeOrchestration />
             <CohortFinder />
+            <AmbulanceDispatch />
+            <HospitalTransfers />
+            <PatientJourneyTimeline />
             <SymptomChecker />
             <NearbyHospitals hospitals={hospitals} />
             <AdminPanel hospitals={hospitals} />
