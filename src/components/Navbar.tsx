@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Activity, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserMenu } from '@/components/UserMenu';
+import NotificationCenter from '@/components/NotificationCenter';
 
 const navLinks = [
   { href: '#top', label: 'Home' },
@@ -105,11 +106,13 @@ export function Navbar() {
                 Open Demo
               </Button>
             </a>
+            <NotificationCenter />
             <UserMenu />
           </motion.div>
 
           {/* Mobile Menu Button */}
           <div className="flex items-center gap-2 lg:hidden">
+            <NotificationCenter />
             <UserMenu />
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
