@@ -1,24 +1,41 @@
 import { useState, useEffect } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { Activity, Menu, X } from 'lucide-react';
+import { Activity, Menu, X, Shield, Ambulance, ArrowLeftRight, BarChart3, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { UserMenu } from '@/components/UserMenu';
 import NotificationCenter from '@/components/NotificationCenter';
+import { useAuthContext } from '@/contexts/AuthContext';
 
-const navLinks = [
+// Anchor links for landing page sections
+const anchorLinks = [
   { href: '#top', label: 'Home' },
   { href: '#dashboard', label: 'Dashboard' },
   { href: '#patient', label: 'Symptom Checker' },
   { href: '#locator', label: 'Nearby Hospitals' },
-  { href: '#admin', label: 'Admin Panel' },
-  { href: '#architecture', label: 'System Design' },
   { href: '#contact', label: 'Contact' },
+];
+
+// Route links for app pages (admin-only)
+const adminRouteLinks = [
+  { to: '/admin', label: 'Command Center', icon: Shield },
+  { to: '/ambulance', label: 'Dispatch', icon: Ambulance },
+  { to: '/transfers', label: 'Transfers', icon: ArrowLeftRight },
+];
+
+// Route links for authenticated users
+const userRouteLinks = [
+  { to: '/analytics', label: 'Analytics', icon: BarChart3 },
+  { to: '/patients', label: 'Patients', icon: Users },
 ];
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { user, isAdmin } = useAuthContext();
+  const location = useLocation();
+  const isLandingPage = location.pathname === '/';
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
@@ -68,7 +85,8 @@ export function Navbar() {
 
           {/* Desktop Nav */}
           <ul className="hidden lg:flex items-center gap-1">
-            {navLinks.map((link, i) => (
+            {/* Landing page anchor links - only show on landing page */}
+            {isLandingPage && anchorLinks.map((link, i) => (
               <motion.li
                 key={link.href}
                 initial={{ opacity: 0, y: -10 }}
@@ -86,6 +104,56 @@ export function Navbar() {
                 >
                   {link.label}
                 </a>
+              </motion.li>
+            ))}
+
+            {/* User route links - authenticated users */}
+            {user && userRouteLinks.map((link, i) => (
+              <motion.li
+                key={link.to}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 + i * 0.05 }}
+              >
+                <Link
+                  to={link.to}
+                  className={cn(
+                    'relative px-3.5 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5',
+                    location.pathname === link.to
+                      ? 'bg-primary/10 text-primary'
+                      : scrolled 
+                        ? 'text-muted-foreground hover:text-foreground hover:bg-accent' 
+                        : 'text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10'
+                  )}
+                >
+                  <link.icon className="w-4 h-4" />
+                  {link.label}
+                </Link>
+              </motion.li>
+            ))}
+
+            {/* Admin route links - admin only */}
+            {isAdmin && adminRouteLinks.map((link, i) => (
+              <motion.li
+                key={link.to}
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 + i * 0.05 }}
+              >
+                <Link
+                  to={link.to}
+                  className={cn(
+                    'relative px-3.5 py-2 text-sm font-medium rounded-lg transition-all duration-200 flex items-center gap-1.5',
+                    location.pathname === link.to
+                      ? 'bg-primary/10 text-primary'
+                      : scrolled 
+                        ? 'text-muted-foreground hover:text-foreground hover:bg-accent' 
+                        : 'text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10'
+                  )}
+                >
+                  <link.icon className="w-4 h-4" />
+                  {link.label}
+                </Link>
               </motion.li>
             ))}
           </ul>
@@ -140,7 +208,8 @@ export function Navbar() {
             className="fixed inset-x-0 top-16 z-40 glass shadow-2xl mx-4 rounded-2xl p-4 lg:hidden"
           >
             <ul className="space-y-1">
-              {navLinks.map((link) => (
+              {/* Anchor links on landing page */}
+              {isLandingPage && anchorLinks.map((link) => (
                 <li key={link.href}>
                   <a
                     href={link.href}
@@ -151,11 +220,55 @@ export function Navbar() {
                   </a>
                 </li>
               ))}
+
+              {/* User route links */}
+              {user && userRouteLinks.map((link) => (
+                <li key={link.to}>
+                  <Link
+                    to={link.to}
+                    onClick={() => setMobileOpen(false)}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-xl transition-colors",
+                      location.pathname === link.to
+                        ? "bg-primary/10 text-primary"
+                        : "text-foreground hover:bg-accent"
+                    )}
+                  >
+                    <link.icon className="w-4 h-4" />
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+
+              {/* Admin route links */}
+              {isAdmin && adminRouteLinks.map((link) => (
+                <li key={link.to}>
+                  <Link
+                    to={link.to}
+                    onClick={() => setMobileOpen(false)}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-xl transition-colors",
+                      location.pathname === link.to
+                        ? "bg-primary/10 text-primary"
+                        : "text-foreground hover:bg-accent"
+                    )}
+                  >
+                    <link.icon className="w-4 h-4" />
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
             <div className="mt-4 pt-4 border-t border-border">
-              <a href="#dashboard" onClick={() => setMobileOpen(false)}>
-                <Button className="w-full">Open Demo</Button>
-              </a>
+              {isLandingPage ? (
+                <a href="#dashboard" onClick={() => setMobileOpen(false)}>
+                  <Button className="w-full">Open Demo</Button>
+                </a>
+              ) : (
+                <Link to="/" onClick={() => setMobileOpen(false)}>
+                  <Button variant="outline" className="w-full">Back to Home</Button>
+                </Link>
+              )}
             </div>
           </motion.div>
         )}
