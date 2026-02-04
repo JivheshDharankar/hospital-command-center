@@ -1,41 +1,24 @@
 
 
-# Fix All Issues Plan
+# Fix All Data Gaps Plan
 
-## Issues Identified
+## Current State
 
-### 1. Data Gaps (Critical for Demo)
-| Table | Current | Required | Status |
-|-------|---------|----------|--------|
-| analytics_snapshots | 15 records | ~450 (30 days × 15 hospitals) | Missing |
-| notifications | 0 records | 8+ sample alerts | Empty |
-| transfer_requests | 1 record | 5+ for demo | Insufficient |
+| Table | Records | Issue |
+|-------|---------|-------|
+| analytics_snapshots | 15 (single day) | Need 30 days of trends |
+| notifications | 0 | No alerts for demo |
+| transfer_requests | 1 (completed) | Need active/pending transfers |
 
-### 2. Landing Page Clutter
-The Index page (`src/pages/Index.tsx`) still includes ALL operational components that should only appear on dedicated routes:
-- `AmbulanceDispatch` (should only be on `/ambulance`)
-- `HospitalTransfers` (should only be on `/transfers`)
-- `PatientJourneyTimeline` (should only be on `/patients`)
-- `HistoricalAnalytics` (should only be on `/analytics`)
+## Phase 1: Seed Analytics Snapshots (30 days × 15 hospitals)
 
-This creates a cluttered landing page and defeats the purpose of the multi-page architecture.
+Generate realistic historical data with daily variations:
 
-### 3. AdminPanel Still on Landing Page
-The `AdminPanel` component is still visible on the public landing page, which should be protected admin-only content.
-
-### 4. Missing Realtime on transfer_requests Table
-Unlike `ambulances` and `dispatch_requests`, the `transfer_requests` table is not added to the Supabase Realtime publication, so live updates won't work.
-
-## Fix Plan
-
-### Phase 1: Seed Missing Data
-
-**1.1 Generate 30 days of analytics snapshots for all hospitals**
 ```sql
 INSERT INTO analytics_snapshots (hospital_id, snapshot_date, occupancy_rate, total_patients, avg_wait_minutes, critical_events)
 SELECT 
   h.id,
-  d.date,
+  d.date::date,
   60 + (random() * 35)::numeric(5,2),
   floor(50 + random() * 150)::integer,
   floor(15 + random() * 45)::integer,
@@ -49,52 +32,47 @@ ON CONFLICT (hospital_id, snapshot_date) DO UPDATE SET
   critical_events = EXCLUDED.critical_events;
 ```
 
-**1.2 Seed sample notifications**
-Insert 8 notifications across different types (alert, info, success, warning) with action URLs pointing to operational pages.
+This creates ~450 records with:
+- Occupancy rates between 60-95%
+- Patient counts between 50-200
+- Wait times between 15-60 minutes
+- 0-4 critical events per day
 
-**1.3 Add more transfer requests**
-Insert 4-5 additional transfer requests with varying urgency levels and statuses.
+## Phase 2: Seed Sample Notifications
 
-### Phase 2: Clean Up Landing Page
+Insert 8 notifications for the admin user with action URLs:
 
-**2.1 Remove operational components from Index.tsx**
+| Type | Title | Action URL |
+|------|-------|------------|
+| alert | Critical Capacity at Ruby Hall | /admin |
+| warning | Transfer Request Pending | /transfers |
+| info | New Patient Journey Started | /patients |
+| success | Ambulance Dispatch Completed | /ambulance |
+| alert | ICU Surge Detected | /analytics |
+| warning | High Wait Times in Emergency | /admin |
+| info | System Maintenance Scheduled | null |
+| success | Transfer Completed Successfully | /transfers |
 
-Remove these imports and component usages:
-- `AmbulanceDispatch`
-- `HospitalTransfers`
-- `PatientJourneyTimeline`
-- `HistoricalAnalytics`
-- `AdminPanel`
+## Phase 3: Seed Transfer Requests
 
-The landing page should focus on:
-- Hero + StatsGrid
-- QueueSimulation (demo)
-- Features + Departments
-- HospitalDashboard + HospitalMap
-- SurgeOrchestration + CohortFinder (public analytics preview)
-- SymptomChecker + NearbyHospitals (patient tools)
-- SystemArchitecture + ContactForm
+Add 5 new transfer requests with varying statuses:
 
-### Phase 3: Enable Realtime for transfer_requests
+| Patient | Source Hospital | Destination | Urgency | Status |
+|---------|-----------------|-------------|---------|--------|
+| Amit Sharma | Ruby Hall | Sahyadri | critical | pending |
+| Priya Patel | KEM Hospital | Jehangir | high | accepted |
+| Rajesh Kumar | Noble Hospital | Columbia Asia | normal | in-transit |
+| Sneha Desai | Bharati | Sassoon | high | pending |
+| Vikram Singh | Poona Hospital | Aditya Birla | critical | pending |
 
-**3.1 Add migration to enable realtime**
-```sql
-ALTER PUBLICATION supabase_realtime ADD TABLE public.transfer_requests;
-```
+## Execution
 
-This ensures the Supabase Realtime subscription in `useTransferRequests.ts` actually works.
-
-## Files to Modify
-
-1. **Database**: Seed analytics_snapshots, notifications, transfer_requests
-2. **Database Migration**: Enable realtime on transfer_requests
-3. **src/pages/Index.tsx**: Remove operational components (AmbulanceDispatch, HospitalTransfers, PatientJourneyTimeline, HistoricalAnalytics, AdminPanel)
+All data will be inserted via the Supabase insert tool in a single operation, using the actual hospital IDs and user ID from the database.
 
 ## Expected Outcome
 
-- Historical Analytics charts show 30 days of meaningful trend data
-- Notification Center displays sample alerts with clickable action links
-- Transfer Center shows multiple pending/active transfers
-- Landing page is clean and focused on public demo features
-- Real-time updates work for all operational tables
+- Historical Analytics page shows 30-day trend charts with meaningful data
+- Notification Center displays 8 sample alerts with clickable action links
+- Transfer Center shows 5 pending/active transfers for demo purposes
+- All features become fully demonstrable
 
