@@ -1,7 +1,9 @@
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, Sparkles, Shield, Zap, Activity, Users, Clock, ChevronDown } from 'lucide-react';
+import { ArrowRight, Sparkles, Shield, Zap, Activity, Users, Clock, ChevronDown, Play } from 'lucide-react';
 import { useEffect, useState, useRef, useCallback } from 'react';
+import { useWalkthrough } from '@/contexts/WalkthroughContext';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 // Particle system configuration
 const PARTICLE_COUNT = 50;
@@ -167,9 +169,11 @@ function FloatingOrb({ size, x, y, delay, color = 'primary' }: { size: number; x
 export function Hero() {
   const [particles] = useState(generateParticles);
   const typewriterText = useTypewriter(typewriterTexts);
+  const { startWalkthrough } = useWalkthrough();
+  const { t } = useLanguage();
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section id="hero-section" className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Premium Gradient Background */}
       <div className="absolute inset-0 bg-gradient-hero" />
       
@@ -274,9 +278,18 @@ export function Hero() {
                 </a>
                 <a href="#patient">
                   <Button variant="heroOutline" size="xl" className="group">
-                    <span className="relative">Try Symptom Checker</span>
+                    <span className="relative">{t('hero.trySymptomChecker')}</span>
                   </Button>
                 </a>
+                <Button
+                  onClick={startWalkthrough}
+                  variant="ghost"
+                  size="xl"
+                  className="gap-2 text-primary-foreground/80 hover:text-primary-foreground hover:bg-primary-foreground/10"
+                >
+                  <Play className="w-5 h-5" />
+                  {t('hero.startTour')}
+                </Button>
               </motion.div>
 
               {/* Feature pills */}

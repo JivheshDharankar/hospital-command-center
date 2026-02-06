@@ -165,7 +165,7 @@ export function HospitalMap({ hospitals }: HospitalMapProps) {
 
   return (
     <SectionCard
-      id="map"
+      id="hospital-map"
       title="Hospital Map View"
       subtitle="Interactive map showing all Pune hospitals with real-time status indicators."
       icon={<MapIcon className="w-6 h-6 text-primary-foreground" />}
