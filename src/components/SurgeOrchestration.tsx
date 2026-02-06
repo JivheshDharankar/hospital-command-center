@@ -37,6 +37,7 @@ export function SurgeOrchestration() {
 
   return (
     <SectionCard
+      id="surge-orchestration"
       title="AI Surge & Capacity Orchestration"
       subtitle="Predicts overload 60–120 minutes ahead and converts it into a simple Pressure Score per hospital."
       icon={<TrendingUp className="w-6 h-6 text-primary-foreground" />}

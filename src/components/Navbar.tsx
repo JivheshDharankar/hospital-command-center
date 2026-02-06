@@ -6,6 +6,8 @@ import { Activity, Menu, X, Shield, Ambulance, ArrowLeftRight, BarChart3, Users 
 import { cn } from '@/lib/utils';
 import { UserMenu } from '@/components/UserMenu';
 import NotificationCenter from '@/components/NotificationCenter';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { LanguageSelector } from '@/components/LanguageSelector';
 import { useAuthContext } from '@/contexts/AuthContext';
 
 // Anchor links for landing page sections
@@ -174,12 +176,16 @@ export function Navbar() {
                 Open Demo
               </Button>
             </a>
+            <LanguageSelector />
+            <ThemeToggle />
             <NotificationCenter />
             <UserMenu />
           </motion.div>
 
           {/* Mobile Menu Button */}
           <div className="flex items-center gap-2 lg:hidden">
+            <LanguageSelector />
+            <ThemeToggle />
             <NotificationCenter />
             <UserMenu />
             <button

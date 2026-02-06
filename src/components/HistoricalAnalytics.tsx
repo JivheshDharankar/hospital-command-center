@@ -2,11 +2,11 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   LineChart, Line, AreaChart, Area, BarChart, Bar,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
+  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import { 
   TrendingUp, TrendingDown, Calendar, RefreshCw, 
-  Activity, Clock, AlertTriangle, Building2, Download
+  Activity, Clock, AlertTriangle, Building2, Download, FileText
 } from 'lucide-react';
 import { useHistoricalData } from '@/hooks/useHistoricalData';
 import { SectionCard } from './SectionCard';
@@ -14,6 +14,8 @@ import { Button } from './ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Skeleton } from './ui/skeleton';
 import { cn } from '@/lib/utils';
+import { generateAnalyticsPDF } from '@/services/pdfGenerator';
+import { useRef } from 'react';
 
 const TIME_RANGES = [
   { label: '7 Days', value: 7 },
@@ -25,6 +27,7 @@ export default function HistoricalAnalytics() {
   const [selectedRange, setSelectedRange] = useState(30);
   const { data, loading, refetch, generateSnapshot } = useHistoricalData(selectedRange);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const chartContainerRef = useRef<HTMLDivElement>(null);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -73,6 +76,17 @@ export default function HistoricalAnalytics() {
     a.click();
   };
 
+  const exportPDF = async () => {
+    const snapshots = data.map(d => ({
+      snapshot_date: d.snapshot_date,
+      total_patients: Number(d.total_patients),
+      avg_wait_minutes: Number(d.avg_wait),
+      occupancy_rate: Number(d.avg_occupancy),
+      critical_events: Number(d.critical_events)
+    }));
+    await generateAnalyticsPDF(snapshots, chartContainerRef.current || undefined);
+  };
+
   if (loading) {
     return (
       <SectionCard
@@ -90,6 +104,7 @@ export default function HistoricalAnalytics() {
 
   return (
     <SectionCard
+      id="historical-analytics"
       title="Historical Analytics"
       subtitle="Track trends and patterns over time"
       icon={<TrendingUp className="w-6 h-6" />}
@@ -123,7 +138,11 @@ export default function HistoricalAnalytics() {
           </Button>
           <Button variant="outline" size="sm" onClick={exportData}>
             <Download className="w-4 h-4 mr-1" />
-            Export
+            CSV
+          </Button>
+          <Button variant="outline" size="sm" onClick={exportPDF}>
+            <FileText className="w-4 h-4 mr-1" />
+            PDF
           </Button>
         </div>
       </div>
@@ -203,9 +222,10 @@ export default function HistoricalAnalytics() {
       </div>
 
       {/* Charts */}
-      <Tabs defaultValue="occupancy" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-4">
-          <TabsTrigger value="occupancy">Occupancy</TabsTrigger>
+      <div ref={chartContainerRef}>
+        <Tabs defaultValue="occupancy" className="w-full">
+          <TabsList className="grid w-full grid-cols-4 mb-4">
+            <TabsTrigger value="occupancy">Occupancy</TabsTrigger>
           <TabsTrigger value="patients">Patients</TabsTrigger>
           <TabsTrigger value="waitTime">Wait Time</TabsTrigger>
           <TabsTrigger value="alerts">Alerts</TabsTrigger>
@@ -301,6 +321,7 @@ export default function HistoricalAnalytics() {
           </ResponsiveContainer>
         </TabsContent>
       </Tabs>
+      </div>
 
       {data.length === 0 && (
         <div className="text-center py-12 text-muted-foreground">
