@@ -318,6 +318,48 @@ export type Database = {
           },
         ]
       }
+      external_notifications: {
+        Row: {
+          channel: string
+          created_at: string | null
+          error_message: string | null
+          external_id: string | null
+          id: string
+          message: string
+          notification_type: string
+          recipient: string
+          sent_at: string | null
+          status: string | null
+          user_id: string | null
+        }
+        Insert: {
+          channel: string
+          created_at?: string | null
+          error_message?: string | null
+          external_id?: string | null
+          id?: string
+          message: string
+          notification_type: string
+          recipient: string
+          sent_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          channel?: string
+          created_at?: string | null
+          error_message?: string | null
+          external_id?: string | null
+          id?: string
+          message?: string
+          notification_type?: string
+          recipient?: string
+          sent_at?: string | null
+          status?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       hospital_alerts: {
         Row: {
           acknowledged: boolean | null
@@ -589,6 +631,7 @@ export type Database = {
       }
       patient_journeys: {
         Row: {
+          access_token: string | null
           admission_type: string
           admitted_at: string | null
           attending_doctor: string | null
@@ -600,10 +643,12 @@ export type Database = {
           id: string
           notes: string | null
           patient_id: string
+          qr_generated_at: string | null
           status: string
           updated_at: string | null
         }
         Insert: {
+          access_token?: string | null
           admission_type: string
           admitted_at?: string | null
           attending_doctor?: string | null
@@ -615,10 +660,12 @@ export type Database = {
           id?: string
           notes?: string | null
           patient_id: string
+          qr_generated_at?: string | null
           status?: string
           updated_at?: string | null
         }
         Update: {
+          access_token?: string | null
           admission_type?: string
           admitted_at?: string | null
           attending_doctor?: string | null
@@ -630,6 +677,7 @@ export type Database = {
           id?: string
           notes?: string | null
           patient_id?: string
+          qr_generated_at?: string | null
           status?: string
           updated_at?: string | null
         }
@@ -702,24 +750,33 @@ export type Database = {
           created_at: string | null
           full_name: string | null
           id: string
+          phone_number: string | null
+          sms_enabled: boolean | null
           updated_at: string | null
           user_id: string
+          whatsapp_enabled: boolean | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string | null
           full_name?: string | null
           id?: string
+          phone_number?: string | null
+          sms_enabled?: boolean | null
           updated_at?: string | null
           user_id: string
+          whatsapp_enabled?: boolean | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string | null
           full_name?: string | null
           id?: string
+          phone_number?: string | null
+          sms_enabled?: boolean | null
           updated_at?: string | null
           user_id?: string
+          whatsapp_enabled?: boolean | null
         }
         Relationships: []
       }
@@ -755,6 +812,110 @@ export type Database = {
           risk?: string
         }
         Relationships: []
+      }
+      staff: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          current_department: string | null
+          hospital_id: string
+          id: string
+          name: string
+          phone: string | null
+          role: string
+          shift_end: string | null
+          shift_start: string | null
+          specialty: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          current_department?: string | null
+          hospital_id: string
+          id?: string
+          name: string
+          phone?: string | null
+          role: string
+          shift_end?: string | null
+          shift_start?: string | null
+          specialty?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          current_department?: string | null
+          hospital_id?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          role?: string
+          shift_end?: string | null
+          shift_start?: string | null
+          specialty?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospital_analytics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_hospital_id_fkey"
+            columns: ["hospital_id"]
+            isOneToOne: false
+            referencedRelation: "hospitals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff_assignments: {
+        Row: {
+          assigned_by: string | null
+          created_at: string | null
+          effective_at: string | null
+          from_department: string | null
+          id: string
+          reason: string | null
+          staff_id: string
+          to_department: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          created_at?: string | null
+          effective_at?: string | null
+          from_department?: string | null
+          id?: string
+          reason?: string | null
+          staff_id: string
+          to_department: string
+        }
+        Update: {
+          assigned_by?: string | null
+          created_at?: string | null
+          effective_at?: string | null
+          from_department?: string | null
+          id?: string
+          reason?: string | null
+          staff_id?: string
+          to_department?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_assignments_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transfer_communications: {
         Row: {
@@ -991,6 +1152,32 @@ export type Database = {
           snapshot_date: string
           total_patients: number
         }[]
+      }
+      get_journey_by_token: {
+        Args: { _journey_id: string; _token: string }
+        Returns: {
+          access_token: string | null
+          admission_type: string
+          admitted_at: string | null
+          attending_doctor: string | null
+          bed_id: string | null
+          created_at: string | null
+          department: string
+          discharged_at: string | null
+          hospital_id: string
+          id: string
+          notes: string | null
+          patient_id: string
+          qr_generated_at: string | null
+          status: string
+          updated_at: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "patient_journeys"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       get_surge_prediction: {
         Args: never

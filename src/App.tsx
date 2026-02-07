@@ -17,6 +17,8 @@ import AmbulanceCenter from "./pages/AmbulanceCenter";
 import TransferCenter from "./pages/TransferCenter";
 import AnalyticsPage from "./pages/AnalyticsPage";
 import PatientTracking from "./pages/PatientTracking";
+import PatientStatus from "./pages/PatientStatus";
+import ResourcesPage from "./pages/ResourcesPage";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +61,12 @@ const App = () => (
                       <PatientTracking />
                     </ProtectedRoute>
                   } />
+                  <Route path="/resources" element={
+                    <ProtectedRoute requireAdmin>
+                      <ResourcesPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/patient-status/:journeyId" element={<PatientStatus />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
