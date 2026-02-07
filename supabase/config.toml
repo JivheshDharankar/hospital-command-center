@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.hospital-analytics]
 verify_jwt = false
+
+[functions.predict-wait-times]
+verify_jwt = false
+
+[functions.send-external-notification]
+verify_jwt = true
