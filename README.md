@@ -1,73 +1,251 @@
-# Welcome to your Lovable project
+# 🏥 MediQueue AI
 
-## Project info
+## Real-Time AI Hospital Operations Command Center
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+> **Predict. Coordinate. Optimize.**
+> An AI-powered platform that transforms hospital operations from reactive chaos into proactive, data-driven control.
 
-## How can I edit this code?
+---
 
-There are several ways of editing your application.
+## 🚀 TL;DR
 
-**Use Lovable**
+**MediQueue AI** is a full-stack hospital command center that simulates real-world healthcare operations in real time. It predicts patient surges, optimizes ambulance dispatch, manages hospital capacity, and coordinates staff — all from a unified dashboard.
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+Built as a hackathon project with **startup-grade architecture**, it demonstrates how AI and real-time systems can dramatically improve healthcare logistics.
 
-Changes made via Lovable will be committed automatically to this repo.
+---
 
-**Use your preferred IDE**
+## 🚨 Problem
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Modern hospitals face systemic operational challenges:
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+* Emergency department overcrowding
+* Bed shortages and inefficient utilization
+* Long patient wait times
+* Poor ambulance coordination
+* Fragmented inter-hospital communication
+* Lack of predictive planning tools
 
-Follow these steps:
+These inefficiencies directly impact patient safety and hospital performance.
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+---
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## 💡 Solution
 
-# Step 3: Install the necessary dependencies.
-npm i
+MediQueue AI acts as a **central mission control system** for hospitals.
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+It combines:
+
+* Real-time operational monitoring
+* Predictive AI analytics
+* Logistics coordination
+* Resource optimization
+
+to help hospitals anticipate problems and respond intelligently.
+
+---
+
+## ✨ Core Features
+
+### 🟢 Operations & Monitoring
+
+* **Live Hospital Dashboard** — real-time bed, queue, and staffing visibility
+* **Department Status Tracking** — per-unit performance monitoring
+* **Patient Journey Timeline** — end-to-end admission tracking
+
+### 🔵 AI Intelligence
+
+* **AI Symptom Triage** — urgency classification and routing
+* **Surge Prediction Engine** — early overload detection
+* **Wait Time Forecasting** — predictive analytics with confidence levels
+
+### 🟣 Logistics & Coordination
+
+* **Ambulance Dispatch Center** — GPS simulation and routing
+* **Inter-Hospital Transfer System**
+* **Dynamic Staff Allocation Dashboard**
+
+### 🟠 Experience Enhancements
+
+* QR-based patient status access
+* Multi-language interface
+* Dark/light mode
+* Analytics dashboard
+* PDF report export
+* Demo walkthrough mode
+
+---
+
+## 🧠 Architecture Overview
+
+```
+Frontend (React + TypeScript)
+        ↓
+Backend Platform (Database + Auth + Realtime)
+        ↓
+AI Prediction Layer (Analytics Engine)
+        ↓
+External Services (Maps + Notifications)
+```
+
+The architecture is modular, scalable, and designed to simulate production-grade hospital infrastructure.
+
+---
+
+## 🛠 Tech Stack
+
+### Frontend
+
+* React 18 + TypeScript
+* Vite build system
+* Tailwind CSS styling
+* Interactive mapping
+* Data visualization charts
+
+### Backend
+
+* PostgreSQL database
+* Authentication & role-based access control
+* Real-time subscriptions
+* Serverless AI processing functions
+
+### Integrations
+
+* AI prediction engine
+* Mapping services
+* Notification services
+
+---
+
+## 📂 Project Structure
+
+```
+hospital-command-center/
+│
+├── src/
+│   ├── components/
+│   ├── pages/
+│   ├── hooks/
+│   ├── services/
+│   └── contexts/
+│
+├── backend/
+├── public/
+└── config/
+```
+
+The codebase follows modular separation of concerns for scalability and maintainability.
+
+---
+
+## 📸 Demo Preview
+
+> Add screenshots or GIFs here before submission
+
+Suggested visuals:
+
+* Operations dashboard
+* Ambulance tracking map
+* AI prediction panel
+* Patient timeline
+* Resource allocation board
+
+---
+
+## 🚀 Installation & Setup
+
+### Requirements
+
+* Node.js v18+
+* npm or yarn
+
+### Run Locally
+
+```bash
+git clone https://github.com/JivheshDharankar/hospital-command-center
+cd hospital-command-center
+npm install
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+App runs at:
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```
+http://localhost:5173
+```
 
-**Use GitHub Codespaces**
+---
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 🔐 Environment Configuration
 
-## What technologies are used for this project?
+Create a `.env` file:
 
-This project is built with:
+```
+VITE_API_URL=your_backend_url
+VITE_PUBLIC_KEY=your_public_key
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Replace with your credentials.
 
-## How can I deploy this project?
+---
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## 🎯 Recommended Demo Flow
 
-## Can I connect a custom domain to my Lovable project?
+1. Display live hospital dashboard
+2. Trigger simulated surge scenario
+3. Show AI overload predictions
+4. Dispatch ambulance on map
+5. Reallocate staff resources
+6. Review analytics impact
 
-Yes, you can!
+This demonstrates the full operational lifecycle.
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+---
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## 📈 Impact
+
+MediQueue AI shows how predictive systems can:
+
+* Reduce emergency wait times
+* Improve hospital utilization
+* Enable proactive planning
+* Enhance patient transparency
+* Strengthen inter-facility coordination
+
+---
+
+## 🔮 Future Roadmap
+
+* Integration with real hospital data systems
+* Advanced machine learning models
+* Automated scheduling optimization
+* Mobile application support
+* Real-time IoT integration
+
+---
+
+## 🧪 Testing & Reliability
+
+The system is designed with:
+
+* Modular architecture
+* Error handling and fallbacks
+* Real-time synchronization
+* Role-based access security
+
+to simulate production-level reliability.
+
+---
+
+## 👨‍💻 Author
+
+**Jivhesh Dharankar**
+
+Hackathon project focused on intelligent healthcare operations.
+
+---
+
+## 📄 License
+
+Educational and hackathon demonstration project.
+
