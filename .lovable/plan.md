@@ -1,406 +1,107 @@
 
-# Implementation Plan: Advanced Technical Features (6-10)
 
-This plan outlines five advanced technical features that will elevate MediQueue AI with real-time tracking, external integrations, AI predictions, and operational efficiency tools.
+# Fix All Issues Plan
 
----
+## 1. Landing Page Cleanup (Performance + Architecture)
 
-## Overview
+**Problem:** `Index.tsx` renders operational/admin components (`AdminPanel`, `AmbulanceDispatch`, `HospitalTransfers`, `PatientJourneyTimeline`, `HistoricalAnalytics`, `SurgeOrchestration`, `CohortFinder`) that should only exist on protected routes. Also, `getTotalOccupancy` is destructured but never used.
 
-| Feature | Impact | Complexity | Estimated Effort |
-|---------|--------|------------|------------------|
-| 6. Real-Time Ambulance GPS Tracking | Very High | High | 4-5 hours |
-| 7. WhatsApp/SMS Integration | High | Medium | 3-4 hours |
-| 8. AI Wait Time Prediction | High | High | 4-5 hours |
-| 9. QR Code Patient Check-In | Medium | Medium | 2-3 hours |
-| 10. Resource Allocation Dashboard | Very High | High | 5-6 hours |
+**Fix:**
+- Remove all operational component imports and renders from `Index.tsx`
+- Keep only public-facing components: `Hero`, `StatsGrid`, `QueueSimulation`, `Features`, `Departments`, `HospitalDashboard`, `HospitalMap`, `SymptomChecker`, `NearbyHospitals`, `SystemArchitecture`, `ContactForm`, `Footer`
+- Remove unused `getTotalOccupancy` destructuring
+- Add `React.lazy()` + `Suspense` for heavy components (`HospitalMap`, `HospitalDashboard`, `SymptomChecker`)
 
 ---
 
-## Feature 6: Real-Time Ambulance GPS Tracking on Map
+## 2. Fix Drag-and-Drop (Broken Logic)
 
-Enhance the HospitalMap component to show live ambulance positions with animated routes to destination hospitals.
+**Problem:** In `ResourceAllocationDashboard.tsx`, the `DndContext` uses `closestCenter` collision detection. When a staff card is dropped, `over.id` resolves to another **staff card's ID** (since `SortableContext` items are staff IDs), not the department name. So `staffMember.current_department !== targetDept` always triggers with a staff UUID as the "target department."
 
-### Current State
-- `useAmbulanceDispatch` hook tracks ambulances with `current_lat/current_lng` fields
-- `AmbulanceDispatch` component shows ambulances on a separate map with static markers
-- Realtime updates already configured for `ambulances` table
-
-### Implementation Steps
-
-1. **Create Animated Route Component**
-   - New file: `src/components/map/AnimatedRoute.tsx`
-   - Use Leaflet Polyline with animated dash-array effect
-   - Calculate route between ambulance position and destination hospital
-   - Update route points in real-time as ambulance moves
-
-2. **Enhance HospitalMap Component**
-   - Add ambulance markers with custom animated icons
-   - Show connecting routes for active dispatches
-   - Display ETA and status overlay on hover
-   - Add toggle control to show/hide ambulances
-
-3. **GPS Simulation Service (Demo Mode)**
-   - Create `src/services/gpsSimulator.ts`
-   - Simulate ambulance movement along routes for demonstrations
-   - Update positions via `updateAmbulancePosition` hook method
-
-4. **Real-Time Route Updates**
-   - Subscribe to `dispatch_requests` table changes
-   - Animate route appearance/disappearance on status changes
-   - Show pulse effect at pickup and destination points
-
-### Technical Details
-
-```text
-New Components:
-├── src/components/map/
-│   ├── AnimatedRoute.tsx      # Animated polyline route
-│   ├── AmbulanceMarker.tsx    # Custom animated ambulance marker
-│   └── RouteInfo.tsx          # Popup with ETA and status
-
-Hook Modifications:
-└── src/hooks/useAmbulanceDispatch.ts
-    └── Add: simulateMovement(), getRouteCoordinates()
-```
-
-### Visual Features
-- Ambulance icons with directional rotation based on heading
-- Animated dashed line showing route to hospital
-- Color-coded routes (red=critical, amber=high, blue=normal)
-- ETA countdown overlay near ambulance marker
-- Pulse animation at origin and destination points
+**Fix:**
+- Use `useDroppable` from `@dnd-kit/core` for each department column instead of relying on `SortableContext` alone
+- Create a `DroppableDepartment` wrapper component that registers each department div as a droppable area with `id={dept.department}`
+- In `handleDragEnd`, check if `over.id` matches a department name; if it matches a staff ID instead, look up which department that staff member belongs to and use the parent container
 
 ---
 
-## Feature 7: WhatsApp/SMS Alert Integration
+## 3. Fix PatientStatus for Unauthenticated Users
 
-Send critical notifications via WhatsApp or SMS for staff who aren't logged into the app.
+**Problem:** After fetching journey via the secure `get_journey_by_token` RPC (which works as a security definer function), the page queries `patients` and `journey_events` tables directly. These have RLS policies requiring authentication, so anonymous QR scans fail silently (patient data and events return null).
 
-### Approach
-Use Twilio for SMS and WhatsApp API integration. Create a backend edge function to handle message dispatch with templates for different alert types.
+**Fix:**
+- Create a new database function `get_patient_status_by_token(_journey_id uuid, _token uuid)` as `SECURITY DEFINER` that returns the journey data joined with patient name/MRN and journey events in a single call
+- Replace the three separate queries in `PatientStatus.tsx` with a single RPC call
+- This bypasses RLS safely since the token acts as the access control
 
-### Database Changes
+---
 
+## 4. Security Fixes
+
+### 4a. Edge Function CORS Headers
+**Problem:** `analyze-symptoms` has outdated CORS headers missing the extra Supabase client headers.
+
+**Fix:** Update CORS headers in `analyze-symptoms/index.ts` to match the pattern used in `send-external-notification`.
+
+### 4b. Analyze-Symptoms Auth
+**Problem:** `analyze-symptoms` accepts a `user_id` from the client body with no server-side validation. Anyone can impersonate any user.
+
+**Fix:** Add JWT validation using `getClaims()` pattern. Extract `user_id` from the token's `sub` claim instead of trusting client input. Allow unauthenticated use for anonymous triage but don't log a `user_id` unless verified.
+
+### 4c. Contact Form Input Validation
+**Problem:** No length limits on name, email, or organization fields. No server-side validation.
+
+**Fix:** Add `maxLength` attributes to input fields and trim inputs before submission. Add Zod schema validation for email format and field lengths.
+
+---
+
+## 5. Code Quality Fixes
+
+- Remove unused `AnimatePresence` import from `ResourceAllocationDashboard.tsx`
+- Add an error boundary component wrapping the main app routes
+- Add toast feedback on drag-and-drop reassignment success/failure in the Resource dashboard
+
+---
+
+## Technical Details
+
+### New Database Migration
 ```sql
--- Add phone column to profiles for SMS/WhatsApp notifications
-ALTER TABLE profiles ADD COLUMN phone_number TEXT;
-ALTER TABLE profiles ADD COLUMN whatsapp_enabled BOOLEAN DEFAULT false;
-ALTER TABLE profiles ADD COLUMN sms_enabled BOOLEAN DEFAULT false;
-
--- Track sent messages
-CREATE TABLE external_notifications (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES auth.users(id),
-  notification_type TEXT NOT NULL,
-  channel TEXT NOT NULL, -- 'sms' | 'whatsapp'
-  recipient TEXT NOT NULL,
-  message TEXT NOT NULL,
-  status TEXT DEFAULT 'pending', -- 'pending' | 'sent' | 'failed' | 'delivered'
-  external_id TEXT,
-  created_at TIMESTAMPTZ DEFAULT now(),
-  sent_at TIMESTAMPTZ,
-  error_message TEXT
-);
+-- Security definer function for public patient status page
+CREATE OR REPLACE FUNCTION public.get_patient_status_by_token(_journey_id uuid, _token uuid)
+RETURNS json
+LANGUAGE plpgsql
+STABLE SECURITY DEFINER
+SET search_path = 'public'
+AS $$
+DECLARE
+  result json;
+BEGIN
+  SELECT json_build_object(
+    'journey', row_to_json(pj),
+    'patient', json_build_object('name', p.name, 'mrn', p.mrn),
+    'events', COALESCE((
+      SELECT json_agg(row_to_json(je) ORDER BY je.event_time DESC)
+      FROM journey_events je WHERE je.journey_id = pj.id
+    ), '[]'::json)
+  ) INTO result
+  FROM patient_journeys pj
+  LEFT JOIN patients p ON p.id = pj.patient_id
+  WHERE pj.id = _journey_id AND pj.access_token = _token;
+  
+  RETURN result;
+END;
+$$;
 ```
 
-### Implementation Steps
+### Files to Modify
+| File | Change |
+|------|--------|
+| `src/pages/Index.tsx` | Remove 7 operational components, add lazy loading, remove unused var |
+| `src/components/ResourceAllocationDashboard.tsx` | Add `useDroppable` for department columns, fix drop target logic, remove unused imports |
+| `src/pages/PatientStatus.tsx` | Replace 3 queries with single `get_patient_status_by_token` RPC |
+| `supabase/functions/analyze-symptoms/index.ts` | Add JWT validation, fix CORS headers, extract user_id from token |
+| `src/components/ContactForm.tsx` | Add maxLength, Zod validation |
+| `src/App.tsx` | Add ErrorBoundary wrapper |
+| New migration | `get_patient_status_by_token` function |
 
-1. **Create Edge Function for Message Dispatch**
-   - New file: `supabase/functions/send-external-notification/index.ts`
-   - Support both Twilio SMS and WhatsApp Business API
-   - Message templates for: critical alerts, capacity warnings, transfer requests
-
-2. **Add Notification Preferences UI**
-   - Extend `NotificationCenter.tsx` settings dialog
-   - Phone number input with verification
-   - Toggle switches for SMS/WhatsApp channels
-   - Test notification button
-
-3. **Trigger External Notifications**
-   - Create database trigger on `hospital_alerts` table for critical events
-   - Extend `notifications` insert to optionally trigger external channels
-   - Rate limiting to prevent spam
-
-4. **Message Templates**
-
-```text
-[CRITICAL] MediQueue AI Alert
-Hospital: {hospital_name}
-Status: Critical Capacity
-Available Beds: {beds}
-Action Required: Review patient transfers
-
-Reply STOP to unsubscribe
-```
-
-### Secrets Required
-- `TWILIO_ACCOUNT_SID`
-- `TWILIO_AUTH_TOKEN`
-- `TWILIO_PHONE_NUMBER`
-- `TWILIO_WHATSAPP_NUMBER` (optional)
-
----
-
-## Feature 8: AI-Powered Wait Time Prediction
-
-Use historical data to predict ER wait times for each hospital using AI analysis.
-
-### Approach
-Create an edge function that leverages Lovable AI (Gemini) to analyze historical patterns in `analytics_snapshots` and predict future wait times based on current conditions.
-
-### Implementation Steps
-
-1. **Create Prediction Edge Function**
-   - New file: `supabase/functions/predict-wait-times/index.ts`
-   - Fetch last 30 days of `analytics_snapshots`
-   - Analyze patterns: day of week, time of day, occupancy correlation
-   - Use Gemini to generate predictions with confidence intervals
-
-2. **Create Prediction Hook**
-   - New file: `src/hooks/useWaitTimePrediction.ts`
-   - Fetch predictions per hospital
-   - Cache predictions with TTL (refresh every 15 minutes)
-   - Return: predicted wait, confidence level, trend direction
-
-3. **Enhance Hospital Cards with Predictions**
-   - Add predicted wait time badge to `HospitalDashboard.tsx`
-   - Show trend indicator (up/down/stable)
-   - Display confidence level as visual indicator
-   - Tooltip with prediction reasoning
-
-4. **Prediction Model Logic**
-
-```text
-Input Features:
-- Current occupancy rate
-- Day of week + hour
-- Historical wait times (same day/time)
-- Recent trend (last 4 hours)
-- Critical event count
-
-Output:
-- Predicted wait time (minutes)
-- Confidence (low/medium/high)
-- Trend direction
-- Suggested actions
-```
-
-### UI Integration
-- Add to `HospitalMap.tsx` popup with predicted wait
-- Add to `HospitalDashboard.tsx` as secondary stat
-- New "Predictions" tab in `HistoricalAnalytics.tsx`
-
----
-
-## Feature 9: QR Code Patient Check-In
-
-Generate QR codes for patients that link to their journey status, reducing front-desk bottlenecks.
-
-### Implementation Steps
-
-1. **Add QR Code Library**
-   - Install `qrcode.react` for generation
-   - No backend changes needed
-
-2. **Create QR Generator Component**
-   - New file: `src/components/patient/PatientQRCode.tsx`
-   - Generate unique URL: `/patient-status/{journey_id}?token={secure_token}`
-   - Display patient name and admission info
-   - Print-friendly layout
-
-3. **Create Public Status Page**
-   - New file: `src/pages/PatientStatus.tsx`
-   - No authentication required (uses secure token)
-   - Shows: current department, estimated wait, journey timeline
-   - Real-time updates via Supabase realtime
-
-4. **Database Changes**
-
-```sql
--- Add secure access token to patient_journeys
-ALTER TABLE patient_journeys ADD COLUMN access_token UUID DEFAULT gen_random_uuid();
-ALTER TABLE patient_journeys ADD COLUMN qr_generated_at TIMESTAMPTZ;
-
--- RLS policy for public access with token
-CREATE POLICY "Public can view journey with token"
-ON patient_journeys FOR SELECT
-USING (access_token = current_setting('request.headers')::json->>'x-access-token');
-```
-
-5. **Integrate into Patient Journey Flow**
-   - Add "Generate QR" button to `PatientJourneyTimeline.tsx`
-   - Print dialog with QR code and patient info
-   - Regenerate token option for security
-
-### QR Code Content
-```text
-URL: https://app.mediqueue.ai/s/{journey_id}?t={access_token}
-
-Printed Card Contains:
-- Patient Name
-- MRN
-- Admission Date
-- QR Code
-- Instructions: "Scan to check your status"
-```
-
----
-
-## Feature 10: Resource Allocation Dashboard
-
-Visualize doctor/nurse allocation across departments with drag-and-drop reassignment during surge scenarios.
-
-### Database Changes
-
-```sql
--- Staff table to track individual staff members
-CREATE TABLE staff (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  hospital_id UUID REFERENCES hospitals(id) NOT NULL,
-  name TEXT NOT NULL,
-  role TEXT NOT NULL, -- 'doctor' | 'nurse' | 'technician'
-  specialty TEXT,
-  current_department TEXT,
-  status TEXT DEFAULT 'on-duty', -- 'on-duty' | 'off-duty' | 'on-call' | 'break'
-  shift_start TIMESTAMPTZ,
-  shift_end TIMESTAMPTZ,
-  phone TEXT,
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
--- Track reassignments for audit
-CREATE TABLE staff_assignments (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  staff_id UUID REFERENCES staff(id) NOT NULL,
-  from_department TEXT,
-  to_department TEXT NOT NULL,
-  assigned_by UUID REFERENCES auth.users(id),
-  reason TEXT,
-  effective_at TIMESTAMPTZ DEFAULT now(),
-  created_at TIMESTAMPTZ DEFAULT now()
-);
-
--- Enable realtime
-ALTER PUBLICATION supabase_realtime ADD TABLE staff;
-ALTER PUBLICATION supabase_realtime ADD TABLE staff_assignments;
-```
-
-### Implementation Steps
-
-1. **Create Staff Management Hook**
-   - New file: `src/hooks/useStaffAllocation.ts`
-   - CRUD operations for staff
-   - Real-time subscription for live updates
-   - Department-grouped staff queries
-
-2. **Create Resource Dashboard Component**
-   - New file: `src/components/ResourceAllocationDashboard.tsx`
-   - Grid layout with departments as columns
-   - Staff cards as draggable items
-   - Drag-and-drop using native HTML5 DnD or `@dnd-kit/core`
-
-3. **Department Capacity Visualization**
-   - Show current vs. recommended staffing levels
-   - Color coding: green (adequate), amber (stretched), red (understaffed)
-   - Surge indicator when above threshold
-
-4. **Reassignment Flow**
-   - Drag staff card from one department to another
-   - Confirmation dialog with reason input
-   - Audit trail in `staff_assignments` table
-   - Optional notification to reassigned staff
-
-5. **Create Protected Page**
-   - New route: `/resources`
-   - Add to admin navigation
-   - Protected with admin role requirement
-
-### UI Design
-
-```text
-┌──────────────────────────────────────────────────────────────────┐
-│ Resource Allocation Dashboard                          [Refresh] │
-├──────────────────────────────────────────────────────────────────┤
-│                                                                  │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌─────────┐ │
-│  │ Emergency   │  │ Cardiology  │  │ Neurology   │  │ General │ │
-│  │ 🟢 6/8      │  │ 🟡 3/5      │  │ 🔴 2/4      │  │ 🟢 4/4  │ │
-│  ├─────────────┤  ├─────────────┤  ├─────────────┤  ├─────────┤ │
-│  │ [Dr. Patel] │  │ [Dr. Shah]  │  │ [Dr. Kumar] │  │ [Dr. X] │ │
-│  │ [Dr. Gupta] │  │ [Nr. Singh] │  │ [Nr. Joshi] │  │ [Nr. Y] │ │
-│  │ [Nr. Mehta] │  │             │  │             │  │         │ │
-│  │ [Nr. Rao]   │  │   [DROP]    │  │   [DROP]    │  │ [DROP]  │ │
-│  └─────────────┘  └─────────────┘  └─────────────┘  └─────────┘ │
-│                                                                  │
-│  Recent Reassignments:                                           │
-│  • Dr. Patel: General → Emergency (10 min ago)                   │
-│  • Nr. Singh: Emergency → Cardiology (25 min ago)                │
-└──────────────────────────────────────────────────────────────────┘
-```
-
----
-
-## Implementation Order
-
-Recommended execution order based on dependencies and impact:
-
-1. **QR Code Patient Check-In** (2-3 hours)
-   - Independent feature, quick win
-   - Adds patient-facing value
-
-2. **AI Wait Time Prediction** (4-5 hours)
-   - Builds on existing analytics infrastructure
-   - High visibility feature
-
-3. **Real-Time Ambulance GPS Tracking** (4-5 hours)
-   - Enhances existing ambulance system
-   - Very impressive for demonstrations
-
-4. **Resource Allocation Dashboard** (5-6 hours)
-   - Requires new database tables
-   - High operational value
-
-5. **WhatsApp/SMS Integration** (3-4 hours)
-   - Requires external API keys (Twilio)
-   - Best implemented last due to external dependencies
-
----
-
-## Technical Requirements Summary
-
-### New Dependencies
-- `qrcode.react` - QR code generation
-- `@dnd-kit/core` - Drag and drop for resource allocation
-
-### New Edge Functions
-- `supabase/functions/predict-wait-times/index.ts`
-- `supabase/functions/send-external-notification/index.ts`
-
-### Database Migrations
-- Add columns to `profiles` (phone, WhatsApp enabled)
-- Add columns to `patient_journeys` (access_token)
-- Create `external_notifications` table
-- Create `staff` and `staff_assignments` tables
-
-### Secrets Required (for WhatsApp/SMS)
-- `TWILIO_ACCOUNT_SID`
-- `TWILIO_AUTH_TOKEN`
-- `TWILIO_PHONE_NUMBER`
-
-### New Pages/Routes
-- `/patient-status/:journeyId` - Public patient status page
-- `/resources` - Resource allocation dashboard (admin only)
-
----
-
-## Success Metrics
-
-After implementation:
-- **Ambulance Tracking**: Dispatchers can see real-time fleet positions with animated routes
-- **External Alerts**: Staff receive critical notifications even when offline
-- **Wait Predictions**: Patients and staff can see AI-predicted wait times
-- **QR Check-In**: Patients can self-serve status checks, reducing front-desk load
-- **Resource Dashboard**: Administrators can visually reassign staff during surges
-
-These features transform MediQueue AI into a comprehensive hospital operations platform with real-world utility beyond demonstration.
