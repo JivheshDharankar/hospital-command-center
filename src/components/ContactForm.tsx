@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { SectionCard } from './SectionCard';
@@ -7,6 +8,12 @@ import { Mail, Send, CheckCircle2, User, Building2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuthContext } from '@/contexts/AuthContext';
+
+const contactSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(100, 'Name must be under 100 characters'),
+  email: z.string().trim().email('Please enter a valid email address').max(255, 'Email must be under 255 characters'),
+  org: z.string().trim().max(200, 'Organization must be under 200 characters').optional(),
+});
 
 export function ContactForm() {
   const [name, setName] = useState('');
@@ -20,34 +27,25 @@ export function ContactForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!name || !email) {
+    const result = contactSchema.safeParse({ name, email, org: org || undefined });
+    if (!result.success) {
       toast({
-        title: 'Error',
-        description: 'Name and email are required.',
+        title: 'Validation Error',
+        description: result.error.errors[0].message,
         variant: 'destructive',
       });
       return;
     }
 
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      toast({
-        title: 'Error',
-        description: 'Please enter a valid email address.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
+    const validated = result.data;
     setIsSubmitting(true);
     
     const { error } = await supabase
       .from('contact_submissions')
       .insert({
-        name,
-        email,
-        organization: org || null,
+        name: validated.name,
+        email: validated.email,
+        organization: validated.org || null,
         user_id: user?.id || null,
       });
 
@@ -70,7 +68,6 @@ export function ContactForm() {
       description: 'Thanks! We\'ll get back to you soon.',
     });
 
-    // Reset after showing success
     setTimeout(() => {
       setName('');
       setEmail('');
@@ -117,6 +114,7 @@ export function ContactForm() {
                 placeholder="Your name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                maxLength={100}
                 className="rounded-xl border-border/50 focus:border-primary/50 h-12"
               />
             </div>
@@ -130,6 +128,7 @@ export function ContactForm() {
                 placeholder="you@hospital.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                maxLength={255}
                 className="rounded-xl border-border/50 focus:border-primary/50 h-12"
               />
             </div>
@@ -142,6 +141,7 @@ export function ContactForm() {
                 placeholder="Hospital / Organisation"
                 value={org}
                 onChange={(e) => setOrg(e.target.value)}
+                maxLength={200}
                 className="rounded-xl border-border/50 focus:border-primary/50 h-12"
               />
             </div>

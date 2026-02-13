@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version',
 };
 
 interface TriageResponse {
@@ -15,13 +15,12 @@ interface TriageResponse {
 }
 
 serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { symptoms, user_id } = await req.json();
+    const { symptoms } = await req.json();
     
     if (!symptoms || typeof symptoms !== 'string' || symptoms.trim().length === 0) {
       console.error("Invalid symptoms input received");
@@ -31,10 +30,29 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Analyzing symptoms for user: ${user_id || 'anonymous'}`);
+    // Extract user_id from JWT if present, don't trust client input
+    let verifiedUserId: string | null = null;
+    const authHeader = req.headers.get('Authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      try {
+        const supabaseAuth = createClient(
+          Deno.env.get('SUPABASE_URL')!,
+          Deno.env.get('SUPABASE_ANON_KEY')!,
+          { global: { headers: { Authorization: authHeader } } }
+        );
+        const token = authHeader.replace('Bearer ', '');
+        const { data: claimsData, error: claimsError } = await supabaseAuth.auth.getClaims(token);
+        if (!claimsError && claimsData?.claims?.sub) {
+          verifiedUserId = claimsData.claims.sub as string;
+        }
+      } catch {
+        // Anonymous usage is fine - just don't log a user_id
+      }
+    }
+
+    console.log(`Analyzing symptoms for user: ${verifiedUserId || 'anonymous'}`);
     console.log(`Symptoms: ${symptoms.substring(0, 100)}...`);
 
-    // Call Lovable AI Gateway
     const apiKey = Deno.env.get('LOVABLE_API_KEY');
     if (!apiKey) {
       console.error("LOVABLE_API_KEY not configured");
@@ -101,16 +119,13 @@ Department options: General Medicine, Cardiology, Neurology, Orthopedics, Pediat
 
     console.log("AI response received successfully");
 
-    // Parse JSON from AI response
     let triageResult: TriageResponse;
     try {
-      // Extract JSON from potential markdown code blocks
       const jsonMatch = content.match(/```json\n?([\s\S]*?)\n?```/) || content.match(/\{[\s\S]*\}/);
       const jsonStr = jsonMatch ? (jsonMatch[1] || jsonMatch[0]) : content;
       triageResult = JSON.parse(jsonStr);
     } catch (parseError) {
       console.error("Failed to parse AI response as JSON:", parseError);
-      // Fallback response
       triageResult = {
         urgency_level: 'medium',
         recommended_department: 'General Medicine',
@@ -120,7 +135,7 @@ Department options: General Medicine, Cardiology, Neurology, Orthopedics, Pediat
       };
     }
 
-    // Log to database if Supabase is available
+    // Log to database using verified user_id only
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
     
@@ -128,7 +143,7 @@ Department options: General Medicine, Cardiology, Neurology, Orthopedics, Pediat
       const supabase = createClient(supabaseUrl, supabaseKey);
       
       const { error: logError } = await supabase.from('triage_logs').insert({
-        user_id: user_id || null,
+        user_id: verifiedUserId,
         symptoms: symptoms,
         ai_response: triageResult,
         recommended_department: triageResult.recommended_department,
