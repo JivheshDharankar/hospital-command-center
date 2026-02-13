@@ -66,41 +66,27 @@ export default function PatientStatus() {
       }
 
       try {
-        // Use the RPC function for secure token-based access
+        // Use the combined SECURITY DEFINER RPC for anonymous access
         const { data, error: fetchError } = await supabase
-          .rpc('get_journey_by_token', {
+          .rpc('get_patient_status_by_token', {
             _journey_id: journeyId,
             _token: token
           });
 
         if (fetchError) throw fetchError;
 
-        if (!data || data.length === 0) {
+        if (!data) {
           setError('Journey not found or access denied');
           setLoading(false);
           return;
         }
 
-        const journeyData = data[0];
-
-        // Fetch patient info
-        const { data: patientData } = await supabase
-          .from('patients')
-          .select('name, mrn')
-          .eq('id', journeyData.patient_id)
-          .single();
-
-        // Fetch journey events
-        const { data: eventsData } = await supabase
-          .from('journey_events')
-          .select('*')
-          .eq('journey_id', journeyId)
-          .order('event_time', { ascending: false });
+        const result = data as { journey: any; patient: any; events: any[] };
 
         setJourney({
-          ...journeyData,
-          patient: patientData || undefined,
-          events: eventsData || []
+          ...result.journey,
+          patient: result.patient || undefined,
+          events: result.events || []
         });
       } catch (err) {
         console.error('Error fetching journey:', err);

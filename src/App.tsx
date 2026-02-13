@@ -9,6 +9,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { WalkthroughProvider } from "@/contexts/WalkthroughContext";
 import { WalkthroughOverlay } from "@/components/walkthrough/WalkthroughOverlay";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
@@ -29,6 +30,7 @@ const App = () => (
         <AuthProvider>
           <WalkthroughProvider>
             <TooltipProvider>
+              <ErrorBoundary>
               <Toaster />
               <Sonner />
               <WalkthroughOverlay />
@@ -71,6 +73,7 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </BrowserRouter>
+              </ErrorBoundary>
             </TooltipProvider>
           </WalkthroughProvider>
         </AuthProvider>

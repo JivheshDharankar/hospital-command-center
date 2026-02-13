@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   DndContext,
   DragOverlay,
@@ -10,6 +10,7 @@ import {
   useSensors,
   DragStartEvent,
   DragEndEvent,
+  useDroppable,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -19,12 +20,11 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
   Users, RefreshCw, UserCheck, UserX, Clock,
-  Stethoscope, Activity, AlertTriangle, GripVertical
+  Stethoscope, Activity, GripVertical
 } from 'lucide-react';
 import { useStaffAllocation, Staff } from '@/hooks/useStaffAllocation';
 import { SectionCard } from './SectionCard';
 import { Button } from './ui/button';
-import { Badge } from './ui/badge';
 import { ScrollArea } from './ui/scroll-area';
 import { Avatar, AvatarFallback } from './ui/avatar';
 import { Skeleton } from './ui/skeleton';
@@ -40,6 +40,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
+import { useToast } from '@/hooks/use-toast';
 
 const ROLE_ICONS: Record<string, React.ReactNode> = {
   doctor: <Stethoscope className="w-3 h-3" />,
@@ -108,6 +109,22 @@ function SortableStaffCard({ staff }: { staff: Staff }) {
   );
 }
 
+function DroppableDepartment({ department, children }: { department: string; children: React.ReactNode }) {
+  const { setNodeRef, isOver } = useDroppable({ id: department });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "glass-premium rounded-xl p-4 transition-all",
+        isOver && "ring-2 ring-primary bg-primary/5"
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
 export default function ResourceAllocationDashboard() {
   const {
     staff,
@@ -119,6 +136,7 @@ export default function ResourceAllocationDashboard() {
     refetch
   } = useStaffAllocation();
 
+  const { toast } = useToast();
   const [activeId, setActiveId] = useState<string | null>(null);
   const [pendingReassignment, setPendingReassignment] = useState<{
     staffId: string;
@@ -135,6 +153,7 @@ export default function ResourceAllocationDashboard() {
   );
 
   const departmentStaffing = getStaffByDepartment();
+  const departmentNames = departmentStaffing.map(d => d.department);
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
@@ -147,9 +166,21 @@ export default function ResourceAllocationDashboard() {
     if (!over) return;
 
     const staffMember = staff.find(s => s.id === active.id);
-    const targetDept = over.id as string;
+    if (!staffMember) return;
 
-    if (staffMember && staffMember.current_department !== targetDept) {
+    let targetDept = over.id as string;
+
+    // If over.id is a staff ID (not a department name), find which department that staff belongs to
+    if (!departmentNames.includes(targetDept)) {
+      const targetStaff = staff.find(s => s.id === targetDept);
+      if (targetStaff?.current_department) {
+        targetDept = targetStaff.current_department;
+      } else {
+        return;
+      }
+    }
+
+    if (staffMember.current_department !== targetDept) {
       setPendingReassignment({
         staffId: staffMember.id,
         staffName: staffMember.name,
@@ -169,8 +200,11 @@ export default function ResourceAllocationDashboard() {
     );
 
     if (success) {
+      toast({ title: 'Staff Reassigned', description: `${pendingReassignment.staffName} moved to ${pendingReassignment.toDept}` });
       setPendingReassignment(null);
       setReason('');
+    } else {
+      toast({ title: 'Reassignment Failed', description: 'Could not reassign staff. Please try again.', variant: 'destructive' });
     }
   };
 
@@ -220,7 +254,6 @@ export default function ResourceAllocationDashboard() {
       subtitle="Drag and drop staff between departments during surge scenarios"
       icon={<Users className="w-6 h-6" />}
     >
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4 text-sm">
           <span className="flex items-center gap-1">
@@ -239,7 +272,6 @@ export default function ResourceAllocationDashboard() {
         </Button>
       </div>
 
-      {/* Department Columns */}
       <DndContext
         sensors={sensors}
         collisionDetection={closestCenter}
@@ -251,11 +283,7 @@ export default function ResourceAllocationDashboard() {
             const status = getStaffingStatus(dept.current, dept.recommended);
             
             return (
-              <div
-                key={dept.department}
-                id={dept.department}
-                className="glass-premium rounded-xl p-4"
-              >
+              <DroppableDepartment key={dept.department} department={dept.department}>
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-semibold text-sm truncate">{dept.department}</h4>
                   <span className="text-lg">{getStatusIcon(status)}</span>
@@ -284,7 +312,7 @@ export default function ResourceAllocationDashboard() {
                     </div>
                   </SortableContext>
                 </ScrollArea>
-              </div>
+              </DroppableDepartment>
             );
           })}
         </div>
@@ -294,7 +322,6 @@ export default function ResourceAllocationDashboard() {
         </DragOverlay>
       </DndContext>
 
-      {/* Recent Reassignments */}
       {assignments.length > 0 && (
         <div className="mt-6 pt-6 border-t border-border">
           <h4 className="font-semibold mb-3 flex items-center gap-2">
@@ -328,7 +355,6 @@ export default function ResourceAllocationDashboard() {
         </div>
       )}
 
-      {/* Confirmation Dialog */}
       <Dialog open={!!pendingReassignment} onOpenChange={() => setPendingReassignment(null)}>
         <DialogContent>
           <DialogHeader>
@@ -348,6 +374,7 @@ export default function ResourceAllocationDashboard() {
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               className="mt-2"
+              maxLength={200}
             />
           </div>
 

@@ -1179,6 +1179,10 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_patient_status_by_token: {
+        Args: { _journey_id: string; _token: string }
+        Returns: Json
+      }
       get_surge_prediction: {
         Args: never
         Returns: {
